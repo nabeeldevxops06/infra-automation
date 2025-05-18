@@ -1,0 +1,35 @@
+pipeline:
+  identifier: Build_nabeeldevxops06_infra_automation_1747583796327
+  name: Build infra-automation
+  orgIdentifier: default
+  projectIdentifier: default_project
+  properties:
+    ci:
+      codebase:
+        build: <+input>
+        connectorRef: account.Github
+        repoName: nabeeldevxops06/infra-automation
+  stages:
+    - stage:
+        identifier: build
+        name: build
+        spec:
+          caching:
+            enabled: true
+          cloneCodebase: true
+          execution:
+            steps:
+              - step:
+                  identifier: echo
+                  name: echo
+                  spec:
+                    command: echo hello world
+                  timeout: ""
+                  type: Run
+          platform:
+            arch: Amd64
+            os: MacOS
+          runtime:
+            spec: {}
+            type: Docker
+        type: CI
