@@ -1,0 +1,14 @@
+inputSet:
+  name: Build_nabeeldevxops06_infra_automation_1747583796327-push-trigger-input-set
+  identifier: Build_nabeeldevxops06_infra_automation_1747583796327pushtriggerinputset
+  orgIdentifier: default
+  projectIdentifier: default_project
+  pipeline:
+    identifier: Build_nabeeldevxops06_infra_automation_1747583796327
+    properties:
+      ci:
+        codebase:
+          build:
+            type: branch
+            spec:
+              branch: <+trigger.branch>
