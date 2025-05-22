@@ -16,8 +16,6 @@ pipeline:
         description: ""
         type: CI
         spec:
-          delegateSelectors:
-            - docker-delegate
           cloneCodebase: true
           caching:
             enabled: true
@@ -46,9 +44,9 @@ pipeline:
             spec:
               type: Pool
               spec:
-                poolName: Harness-Docker
+                poolName: docker-delegate
                 harnessImageConnectorRef: account.harnessImage
-                os: MacOS
+                os: Linux
     - parallel:
         - stage:
             name: AWS-Deploy
@@ -63,8 +61,6 @@ pipeline:
                       name: Terragrunt-Apply-AWS
                       identifier: TerragruntApplyAWS
                       spec:
-                        delegateSelectors:
-                          - docker-delegate
                         shell: Bash
                         executionTarget: {}
                         source:
@@ -72,22 +68,9 @@ pipeline:
                           spec:
                             script: |-
                               cd aws
-                              # Initialize using local config:
-                              terragrunt init --terragrunt-config=terragrunt.local.hcl
-                              # (optional) preview before apply:
-                              terragrunt plan --terragrunt-config=terragrunt.local.hcl
-                              # Apply into local terraform.tfstate
-                              terragrunt apply --auto-approve --terragrunt-config=terragrunt.local.hcl
-                        environmentVariables:
-                          - name: AWS_ACCESS_KEY_ID
-                            type: Secret
-                            value: AWS_ACCESS_KEY_ID
-                          - name: AWS_SECRET_ACCESS_KEY
-                            type: Secret
-                            value: AKIAURWV2XVECOD6Y7CS-skigit
-                          - name: AWS_DEFAULT_REGION
-                            type: String
-                            value: us-east-1
+                              terragrunt init
+                              terragrunt apply --auto-approve
+                        environmentVariables: []
                         outputVariables: []
                       timeout: 10m
             tags: {}
@@ -104,19 +87,15 @@ pipeline:
                       name: Terragrunt-Apply-Azure
                       identifier: TerragruntApplyAzure
                       spec:
-                        delegateSelectors:
-                          - docker-delegate
                         shell: Bash
                         executionTarget: {}
                         source:
                           type: Inline
                           spec:
                             script: |
-                              # cd azure
-                              # terragrunt init
-                              # terragrunt apply --auto-approve
-
-                              echo "Azure"
+                              cd azure
+                              terragrunt init
+                              terragrunt apply --auto-approve
                         environmentVariables: []
                         outputVariables: []
                       timeout: 10m
