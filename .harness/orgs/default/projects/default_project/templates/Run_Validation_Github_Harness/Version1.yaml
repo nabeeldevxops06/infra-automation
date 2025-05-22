@@ -1,0 +1,12 @@
+template:
+  name: Run_Validation_Github_Harness
+  type: Step
+  projectIdentifier: default_project
+  orgIdentifier: default
+  spec:
+    type: Run
+    spec:
+      shell: Sh
+      command: echo "Harness & GitHub validated."
+  identifier: Run_Validation_Github_Harness
+  versionLabel: Version1
