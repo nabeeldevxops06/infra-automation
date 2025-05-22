@@ -16,6 +16,8 @@ pipeline:
         description: ""
         type: CI
         spec:
+          delegateSelectors:
+            - docker-delegate
           cloneCodebase: true
           caching:
             enabled: true
@@ -61,13 +63,13 @@ pipeline:
                       name: Terragrunt-Apply-AWS
                       identifier: TerragruntApplyAWS
                       spec:
+                        delegateSelectors:
+                          - docker-delegate
                         shell: Bash
                         executionTarget: {}
                         source:
                           type: Inline
                           spec:
-                            delegateSelectors:
-                              - docker-delegate
                             script: |-
                               cd aws
                               # Initialize using local config:
