@@ -66,6 +66,8 @@ pipeline:
                         source:
                           type: Inline
                           spec:
+                            delegateSelectors:
+                              - docker-delegate
                             script: |-
                               cd aws
                               # Initialize using local config:
@@ -100,6 +102,8 @@ pipeline:
                       name: Terragrunt-Apply-Azure
                       identifier: TerragruntApplyAzure
                       spec:
+                        delegateSelectors:
+                          - docker-delegate
                         shell: Bash
                         executionTarget: {}
                         source:
