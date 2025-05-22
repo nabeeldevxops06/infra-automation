@@ -1,0 +1,15 @@
+template:
+  name: Github-Clone with BuildStage
+  type: Step
+  projectIdentifier: default_project
+  orgIdentifier: default
+  spec:
+    type: GitClone
+    spec:
+      connectorRef: infraautomationdev
+      build:
+        type: branch
+        spec:
+          branch: main
+  identifier: GithubClone_with_BuildStage
+  versionLabel: Version1
