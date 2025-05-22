@@ -45,26 +45,56 @@ pipeline:
                   spec:
                     shell: Sh
                     command: echo "Harness & GitHub validated."
-    - stage:
-        name: Terraform-Plan-Apply
-        identifier: TerraformPlanApply
-        description: Run Terraform init, plan and apply against AWS & Azure modules
-        type: Custom
-        spec:
-          execution:
-            steps:
-              - step:
-                  type: ShellScript
-                  name: ShellScript_1
-                  identifier: ShellScript_1
-                  spec:
-                    shell: Bash
-                    executionTarget: {}
-                    source:
-                      type: Inline
+    - parallel:
+        - stage:
+            name: AWS-Deploy
+            identifier: AWSDeploy
+            description: ""
+            type: Custom
+            spec:
+              execution:
+                steps:
+                  - step:
+                      type: ShellScript
+                      name: Terragrunt-Apply-AWS
+                      identifier: TerragruntApplyAWS
                       spec:
-                        script: echo "Testing"
-                    environmentVariables: []
-                    outputVariables: []
-                  timeout: 10m
-        tags: {}
+                        shell: Bash
+                        executionTarget: {}
+                        source:
+                          type: Inline
+                          spec:
+                            script: |-
+                              cd aws
+                              terragrunt init
+                              terragrunt apply --auto-approve
+                        environmentVariables: []
+                        outputVariables: []
+                      timeout: 10m
+            tags: {}
+        - stage:
+            name: Azure-Deploy
+            identifier: AzureDeploy
+            description: ""
+            type: Custom
+            spec:
+              execution:
+                steps:
+                  - step:
+                      type: ShellScript
+                      name: Terragrunt-Apply-Azure
+                      identifier: TerragruntApplyAzure
+                      spec:
+                        shell: Bash
+                        executionTarget: {}
+                        source:
+                          type: Inline
+                          spec:
+                            script: |
+                              cd azure
+                              terragrunt init
+                              terragrunt apply --auto-approve
+                        environmentVariables: []
+                        outputVariables: []
+                      timeout: 10m
+            tags: {}
