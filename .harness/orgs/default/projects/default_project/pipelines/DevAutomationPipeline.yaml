@@ -1,0 +1,70 @@
+pipeline:
+  name: Dev-Automation-Pipeline
+  identifier: DevAutomationPipeline
+  projectIdentifier: default_project
+  orgIdentifier: default
+  tags: {}
+  properties:
+    ci:
+      codebase:
+        connectorRef: infraautomationdev
+        build: <+input>
+  stages:
+    - stage:
+        name: Build-Code
+        identifier: BuildCode
+        description: ""
+        type: CI
+        spec:
+          cloneCodebase: true
+          caching:
+            enabled: true
+            override: true
+          platform:
+            os: MacOS
+            arch: Amd64
+          runtime:
+            type: Docker
+            spec: {}
+          execution:
+            steps:
+              - step:
+                  type: GitClone
+                  name: GitClone_1
+                  identifier: GitClone_1
+                  spec:
+                    connectorRef: infraautomationdev
+                    build:
+                      type: branch
+                      spec:
+                        branch: main
+              - step:
+                  type: Run
+                  name: Run_Validation
+                  identifier: Run_Validation
+                  spec:
+                    shell: Sh
+                    command: echo "Harness & GitHub validated."
+    - stage:
+        name: Terraform-Plan-Apply
+        identifier: TerraformPlanApply
+        description: Run Terraform init, plan and apply against AWS & Azure modules
+        type: Custom
+        spec:
+          execution:
+            steps:
+              - step:
+                  type: ShellScript
+                  name: ShellScript_1
+                  identifier: ShellScript_1
+                  spec:
+                    shell: Bash
+                    executionTarget: {}
+                    source:
+                      type: Inline
+                      spec:
+                        script: echo "Testing"
+                    environmentVariables: []
+                    outputVariables: []
+                  timeout: 10m
+        tags: {}
