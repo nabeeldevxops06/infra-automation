@@ -44,7 +44,7 @@ pipeline:
             spec:
               type: Pool
               spec:
-                poolName: docker-delegate
+                poolName: ubuntu-ci-pool
                 harnessImageConnectorRef: account.harnessImage
                 os: Linux
     - parallel:
