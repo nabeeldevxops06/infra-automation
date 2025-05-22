@@ -1,0 +1,8 @@
+environment:
+  name: SLos-Environment
+  identifier: SLosEnvironment
+  description: ""
+  tags: {}
+  type: PreProduction
+  orgIdentifier: default
+  projectIdentifier: default_project
