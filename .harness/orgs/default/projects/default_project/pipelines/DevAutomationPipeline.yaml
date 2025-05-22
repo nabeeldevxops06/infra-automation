@@ -20,12 +20,6 @@ pipeline:
           caching:
             enabled: true
             override: true
-          platform:
-            os: MacOS
-            arch: Amd64
-          runtime:
-            type: Docker
-            spec: {}
           execution:
             steps:
               - step:
@@ -45,6 +39,14 @@ pipeline:
                   spec:
                     shell: Sh
                     command: echo "Harness & GitHub validated."
+          infrastructure:
+            type: VM
+            spec:
+              type: Pool
+              spec:
+                poolName: Harness-Docker
+                harnessImageConnectorRef: account.harnessImage
+                os: MacOS
     - parallel:
         - stage:
             name: AWS-Deploy
