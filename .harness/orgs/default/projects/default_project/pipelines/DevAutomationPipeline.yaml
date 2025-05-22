@@ -66,9 +66,22 @@ pipeline:
                           spec:
                             script: |-
                               cd aws
-                              terragrunt init
-                              terragrunt apply --auto-approve
-                        environmentVariables: []
+                              # Initialize using local config:
+                              terragrunt init --terragrunt-config=terragrunt.local.hcl
+                              # (optional) preview before apply:
+                              terragrunt plan --terragrunt-config=terragrunt.local.hcl
+                              # Apply into local terraform.tfstate
+                              terragrunt apply --auto-approve --terragrunt-config=terragrunt.local.hcl
+                        environmentVariables:
+                          - name: AWS_ACCESS_KEY_ID
+                            type: Secret
+                            value: AWS_ACCESS_KEY_ID
+                          - name: AWS_SECRET_ACCESS_KEY
+                            type: Secret
+                            value: AKIAURWV2XVECOD6Y7CS-skigit
+                          - name: AWS_DEFAULT_REGION
+                            type: String
+                            value: us-east-1
                         outputVariables: []
                       timeout: 10m
             tags: {}
@@ -91,9 +104,11 @@ pipeline:
                           type: Inline
                           spec:
                             script: |
-                              cd azure
-                              terragrunt init
-                              terragrunt apply --auto-approve
+                              # cd azure
+                              # terragrunt init
+                              # terragrunt apply --auto-approve
+
+                              echo "Azure"
                         environmentVariables: []
                         outputVariables: []
                       timeout: 10m
