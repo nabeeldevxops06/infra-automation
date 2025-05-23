@@ -48,7 +48,7 @@ pipeline:
                 harnessImageConnectorRef: account.harnessImage
                 os: Linux
         delegateSelectors:
-          - docker-delegate
+          - new-docker-delegate
     - parallel:
         - stage:
             name: AWS-Deploy
@@ -72,10 +72,21 @@ pipeline:
                               cd aws
                               terragrunt init
                               terragrunt apply --auto-approve
-                        environmentVariables: []
+                        environmentVariables:
+                          - name: AWS_ACCESS_KEY_ID
+                            type: Secret
+                            value: AWS_ACCESS_KEY_ID
+                          - name: AWS_SECRET_ACCESS_KEY
+                            type: Secret
+                            value: AWS_ACCESS_SECRET_ID
+                          - name: AWS_DEFAULT_REGION
+                            type: String
+                            value: us-east-1
                         outputVariables: []
                       timeout: 10m
             tags: {}
+            delegateSelectors:
+              - new-docker-delegate
         - stage:
             name: Azure-Deploy
             identifier: AzureDeploy
