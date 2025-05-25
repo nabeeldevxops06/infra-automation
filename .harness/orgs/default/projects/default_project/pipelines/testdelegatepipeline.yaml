@@ -31,46 +31,10 @@ pipeline:
                     environmentVariables: []
                     outputVariables: []
                   timeout: 10m
+          environment:
+            environmentRef: SLosEnvironment
+            deployToAll: false
         tags: {}
-        delegateSelectors:
-          - docker-delegate
-    - stage:
-        name: GitClone_1
-        identifier: GitClone_1
-        description: ""
-        type: CI
-        spec:
-          cloneCodebase: true
-          caching:
-            enabled: true
-            override: true
-          platform:
-            os: Linux
-            arch: Arm64
-          runtime:
-            type: Docker
-            spec: {}
-          execution:
-            steps:
-              - step:
-                  type: GitClone
-                  name: GitClone_1
-                  identifier: GitClone_1
-                  spec:
-                    connectorRef: infraautomationdev
-                    repoName: infra-automation
-                    cloneDirectory: https://github.com/nabeeldevxops06/infra-automation.git
-                    build:
-                      type: branch
-                      spec:
-                        branch: main
-              - step:
-                  type: Run
-                  name: Run_Validation
-                  identifier: Run_Validation
-                  spec:
-                    shell: Sh
-                    command: echo "Harness & GitHub validated.""
         delegateSelectors:
           - docker-delegate
   properties:
