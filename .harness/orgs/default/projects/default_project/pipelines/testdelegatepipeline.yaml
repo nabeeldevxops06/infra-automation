@@ -1,0 +1,36 @@
+pipeline:
+  name: test-delegate-pipeline
+  identifier: testdelegatepipeline
+  projectIdentifier: default_project
+  orgIdentifier: default
+  tags: {}
+  stages:
+    - stage:
+        name: test
+        identifier: test
+        description: ""
+        type: Custom
+        spec:
+          execution:
+            steps:
+              - step:
+                  type: ShellScript
+                  name: Test Shell Step
+                  identifier: Test_Shell_Step
+                  spec:
+                    shell: Bash
+                    executionTarget: {}
+                    delegateSelectors:
+                      - docker-delegate
+                    source:
+                      type: Inline
+                      spec:
+                        script: |
+                          echo "✅ Hello from Harness Delegate!"
+                          uname -a
+                    environmentVariables: []
+                    outputVariables: []
+                  timeout: 10m
+        tags: {}
+        delegateSelectors:
+          - docker-delegate
