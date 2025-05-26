@@ -54,33 +54,18 @@ jobs:
         run: |
           curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh \
             | sudo bash
-
       - name: TFLint AWS init
-        run: |
-          tflint \
-            --chdir=aws \
-            --config=$GITHUB_WORKSPACE/.tflint.hcl \
-            --init
-
+        run: tflint --chdir=aws --config=$GITHUB_WORKSPACE/.tflint.hcl --init
+      
       - name: TFLint AWS module
-        run: |
-          tflint \
-            --chdir=aws \
-            --config=$GITHUB_WORKSPACE/.tflint.hcl
-
+        run: tflint --chdir=aws --config=$GITHUB_WORKSPACE/.tflint.hcl
+      
       - name: TFLint Azure init
-        run: |
-          tflint \
-            --chdir=azure \
-            --config=$GITHUB_WORKSPACE/.tflint.hcl \
-            --init
-
+        run: tflint --chdir=azure --config=$GITHUB_WORKSPACE/.tflint.hcl --init
+      
       - name: TFLint Azure module
-        run: |
-          tflint \
-            --chdir=azure \
-            --config=$GITHUB_WORKSPACE/.tflint.hcl
-
+        run: tflint --chdir=azure --config=$GITHUB_WORKSPACE/.tflint.hcl
+          
       - name: Terraform fmt
         run: terraform fmt -check -recursive
 
