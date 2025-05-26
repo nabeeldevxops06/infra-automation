@@ -171,29 +171,33 @@ jobs:
           terraform validate
 
 
+      # needs: [setup, lint,sona]
+
   aws-deploy:
     name: AWS Bucket Provisioning
-    # needs: [setup, lint, sonar]
     needs: [setup, lint]
     runs-on: self-hosted
     environment: production
     steps:
       - uses: actions/checkout@v4
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
+
       - name: Terragrunt init & plan
+        working-directory: aws    # ← point here
         run: |
-          cd aws/storage
           terragrunt init
           terragrunt plan --terragrunt-non-interactive -out=tfplan
+
       - name: Terragrunt apply
         id: aws_apply
+        working-directory: aws    # ← and here
         run: |
-          cd aws/storage
           terragrunt apply --terragrunt-non-interactive tfplan
 
   # # 5. Terragrunt plan/apply for Azure
