@@ -41,6 +41,3 @@ resource "aws_s3_bucket" "state" {
   acl    = "private"
 }
 
-resource "random_id" "suffix" {
-  byte_length = 4
-}
