@@ -173,7 +173,6 @@ jobs:
 
   #     # needs: [setup, lint,sona]
 
-
   aws-deploy:
     name: AWS Bucket Provisioning
     needs: [setup]
@@ -194,33 +193,27 @@ jobs:
         with:
           terraform_version: 1.5.7
 
-      - name: Install Terragrunt v0.58.7
+      - name: Install Terragrunt v0.58.7 (no sudo)
         run: |
           set -eux
-
-          # Detect architecture
           ARCH=$(uname -m)
           if [[ "$ARCH" == "x86_64" ]]; then
-              PLATFORM="linux_amd64"
+            PLATFORM="linux_amd64"
           elif [[ "$ARCH" == "aarch64" ]]; then
-              PLATFORM="linux_arm64"
+            PLATFORM="linux_arm64"
           else
-              echo "Unsupported architecture: $ARCH"
-              exit 1
+            echo "Unsupported architecture: $ARCH"
+            exit 1
           fi
-
-          # Download Terragrunt
-          TERRAGRUNT_VERSION="v0.58.7"
           curl -L \
-            "https://github.com/gruntwork-io/terragrunt/releases/download/${TERRAGRUNT_VERSION}/terragrunt_${PLATFORM}" \
+            "https://github.com/gruntwork-io/terragrunt/releases/download/v0.58.7/terragrunt_${PLATFORM}" \
             -o terragrunt
-
-          # Install it
           chmod +x terragrunt
-          sudo mv terragrunt /usr/local/bin/terragrunt
-
-          # Quick verify
-          terragrunt -v
+          mkdir -p $HOME/bin
+          mv terragrunt $HOME/bin/terragrunt
+          echo "$HOME/bin" >> $GITHUB_PATH
+      - name: Verify Terragrunt
+        run: terragrunt -v
 
       - name: Terragrunt init & plan
         working-directory: aws
@@ -231,8 +224,7 @@ jobs:
       - name: Terragrunt apply
         if: ${{ success() }}
         working-directory: aws
-        run: |
-          terragrunt apply --terragrunt-non-interactive tfplan
+        run: terragrunt apply --terragrunt-non-interactive tfplan
 
 
   # # 5. Terragrunt plan/apply for Azure
