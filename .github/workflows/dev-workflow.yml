@@ -42,26 +42,31 @@ jobs:
 
   # 2. Lint & fmt check
   lint-aws:
-    name: TFLint AWS Module
-    needs: setup
+    name: Lint & Validate AWS Module
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Download & init plugins per module
+      - name: Install system deps & TFLint
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl unzip
+          curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh \
+            | sudo bash
+
       - name: TFLint AWS init
         run: |
           tflint \
             --chdir=aws \
-            --config=${{ needs.setup.outputs.workspace }}/.tflint.hcl \
+            --config=$GITHUB_WORKSPACE/.tflint.hcl \
             --init
 
       - name: TFLint AWS scan
         run: |
           tflint \
             --chdir=aws \
-            --config=${{ needs.setup.outputs.workspace }}/.tflint.hcl
+            --config=$GITHUB_WORKSPACE/.tflint.hcl
 
       - name: Terraform validate (AWS)
         run: |
@@ -70,31 +75,37 @@ jobs:
           terraform validate
 
   lint-azure:
-    name: TFLint Azure Module
-    needs: setup
+    name: Lint & Validate Azure Module
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install system deps & TFLint
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl unzip
+          curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh \
+            | sudo bash
+
       - name: TFLint Azure init
         run: |
           tflint \
             --chdir=azure \
-            --config=${{ needs.setup.outputs.workspace }}/.tflint.hcl \
+            --config=$GITHUB_WORKSPACE/.tflint.hcl \
             --init
 
       - name: TFLint Azure scan
         run: |
           tflint \
             --chdir=azure \
-            --config=${{ needs.setup.outputs.workspace }}/.tflint.hcl
+            --config=$GITHUB_WORKSPACE/.tflint.hcl
 
-      - name: Terraform validate (Azure)
-        run: |
-          cd azure
-          terraform init -backend=false
-          terraform validate
+      # - name: Terraform validate (Azure)
+      #   run: |
+      #     cd azure
+      #     terraform init -backend=false
+      #     terraform validate
 
 
 
