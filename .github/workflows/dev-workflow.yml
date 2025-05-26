@@ -173,6 +173,7 @@ jobs:
 
   #     # needs: [setup, lint,sona]
 
+
   aws-deploy:
     name: AWS Bucket Provisioning
     needs: [setup]
@@ -181,7 +182,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # 1) Configure AWS creds
+      # 1) AWS creds
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -189,29 +190,31 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region:            us-east-1
 
-      # 2) Install Terraform
+      # 2) Terraform
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.5.7
 
-          # (Only run once on the machine, not per job)
-      - name: Install Terragrunt on host (skip if already installed)
-        run: |
-          curl -L https://github.com/gruntwork-io/terragrunt/releases/download/v0.58.7/terragrunt_linux_amd64 \
-            -o terragrunt && chmod +x terragrunt && sudo mv terragrunt /usr/local/bin/
+      # 3) Terragrunt (non-container action)
+      - name: Install Terragrunt
+        uses: gruntwork-io/setup-terragrunt@v0.1.3
+        with:
+          version: v0.58.7
 
-    
-      - name: Terragrunt plan (host binary)
+      # 4) Terragrunt init & plan
+      - name: Terragrunt init & plan
         working-directory: aws
         run: |
           terragrunt init
           terragrunt plan --terragrunt-non-interactive -out=tfplan
 
+      # 5) Terragrunt apply
       - name: Terragrunt apply
-        if: success()
+        if: ${{ success() }}
         working-directory: aws
-        run: terragrunt apply --terragrunt-non-interactive tfplan
+        run: |
+          terragrunt apply --terragrunt-non-interactive tfplan
 
   # # 5. Terragrunt plan/apply for Azure
   # azure-deploy:
