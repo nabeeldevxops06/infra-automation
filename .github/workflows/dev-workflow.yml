@@ -30,44 +30,71 @@ jobs:
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.5.7
-      - name: Install Terragrunt
+      - name: Install Terragrunt & TFLint
         run: |
-          curl -Lo terragrunt https://github.com/gruntwork-io/terragrunt/releases/download/v0.54.1/terragrunt-linux-amd64
+          # Terragrunt (if you also use Terragrunt in other jobs)
+          curl -Lo terragrunt \
+            https://github.com/gruntwork-io/terragrunt/releases/download/v0.54.1/terragrunt-linux-amd64
           chmod +x terragrunt && sudo mv terragrunt /usr/local/bin/
-
-  # 2. Lint & fmt check
-
-  lint:
-    name: Terraform Lint & Format
-    runs-on: ubuntu-latest
-    needs: setup
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install deps
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y curl unzip
-
-      - name: Install tflint
-        run: |
+          # TFLint installer
           curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh \
             | sudo bash
+
+  # 2. Lint & fmt check
+  lint-aws:
+    name: TFLint AWS Module
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Download & init plugins per module
       - name: TFLint AWS init
-        run: tflint --chdir=aws --config=$GITHUB_WORKSPACE/.tflint.hcl --init
-      
-      - name: TFLint AWS module
-        run: tflint --chdir=aws --config=$GITHUB_WORKSPACE/.tflint.hcl
-      
+        run: |
+          tflint \
+            --chdir=aws \
+            --config=${{ needs.setup.outputs.workspace }}/.tflint.hcl \
+            --init
+
+      - name: TFLint AWS scan
+        run: |
+          tflint \
+            --chdir=aws \
+            --config=${{ needs.setup.outputs.workspace }}/.tflint.hcl
+
+      - name: Terraform validate (AWS)
+        run: |
+          cd aws
+          terraform init -backend=false
+          terraform validate
+
+  lint-azure:
+    name: TFLint Azure Module
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: TFLint Azure init
-        run: tflint --chdir=azure --config=$GITHUB_WORKSPACE/.tflint.hcl --init
-      
-      - name: TFLint Azure module
-        run: tflint --chdir=azure --config=$GITHUB_WORKSPACE/.tflint.hcl
-          
-      - name: Terraform fmt
-        run: terraform fmt -check -recursive
+        run: |
+          tflint \
+            --chdir=azure \
+            --config=${{ needs.setup.outputs.workspace }}/.tflint.hcl \
+            --init
+
+      - name: TFLint Azure scan
+        run: |
+          tflint \
+            --chdir=azure \
+            --config=${{ needs.setup.outputs.workspace }}/.tflint.hcl
+
+      - name: Terraform validate (Azure)
+        run: |
+          cd azure
+          terraform init -backend=false
+          terraform validate
 
 
 
@@ -91,7 +118,7 @@ jobs:
   aws-deploy:
     name: AWS Bucket Provisioning
     # needs: [setup, lint, sonar]
-    needs: [setup, lint]
+    needs: [setup, lint-aws]
     runs-on: self-hosted
     environment: production
     steps:
