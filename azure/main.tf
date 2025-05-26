@@ -11,9 +11,21 @@
 #   }
 # }
 
-# provider "azurerm" {
-#   features {}
-# }
+
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 3.70"
+    }
+  }
+  required_version = ">= 1.5.7"
+}
+
+provider "azurerm" {
+  features {}
+}
+
 
 # resource "azurerm_resource_group" "rg" {
 #   name     = "infra-auto-rg"
