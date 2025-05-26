@@ -37,7 +37,6 @@ jobs:
 
   # 2. Lint & fmt check
 
-jobs:
   lint:
     name: Terraform Lint & Format
     runs-on: ubuntu-latest
