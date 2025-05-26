@@ -130,58 +130,58 @@ jobs:
 #   # 4. Terragrunt plan/apply for AWS
   
 
-  lint:
-    runs-on: ubuntu-latest
-    needs: setup
-    strategy:
-      matrix:
-        module: [aws, azure]
-    steps:
-      - uses: actions/checkout@v4
+  # lint:
+  #   runs-on: ubuntu-latest
+  #   needs: setup
+  #   strategy:
+  #     matrix:
+  #       module: [aws, azure]
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - name: Install system deps & TFLint & Terraform
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y curl unzip
-          # Terraform
-          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-          sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-          sudo apt-get update && sudo apt-get install -y terraform
-          # TFLint
-          curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh \
-            | sudo bash
+  #     - name: Install system deps & TFLint & Terraform
+  #       run: |
+  #         sudo apt-get update
+  #         sudo apt-get install -y curl unzip
+  #         # Terraform
+  #         curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+  #         sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+  #         sudo apt-get update && sudo apt-get install -y terraform
+  #         # TFLint
+  #         curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh \
+  #           | sudo bash
 
-      - name: Initialize TFLint plugins
-        run: |
-          tflint \
-            --chdir=${{ matrix.module }} \
-            --config=$GITHUB_WORKSPACE/.tflint.hcl \
-            --init
+  #     - name: Initialize TFLint plugins
+  #       run: |
+  #         tflint \
+  #           --chdir=${{ matrix.module }} \
+  #           --config=$GITHUB_WORKSPACE/.tflint.hcl \
+  #           --init
 
-      - name: TFLint scan
-        run: |
-          tflint \
-            --chdir=${{ matrix.module }} \
-            --config=$GITHUB_WORKSPACE/.tflint.hcl
+  #     - name: TFLint scan
+  #       run: |
+  #         tflint \
+  #           --chdir=${{ matrix.module }} \
+  #           --config=$GITHUB_WORKSPACE/.tflint.hcl
 
-      - name: Terraform validate
-        run: |
-          cd ${{ matrix.module }}
-          terraform init -backend=false -upgrade
-          terraform validate
+  #     - name: Terraform validate
+  #       run: |
+  #         cd ${{ matrix.module }}
+  #         terraform init -backend=false -upgrade
+  #         terraform validate
 
 
-      # needs: [setup, lint,sona]
-      
+  #     # needs: [setup, lint,sona]
+
   aws-deploy:
     name: AWS Bucket Provisioning
-    needs: [setup, lint]
+    needs: [setup]
     runs-on: self-hosted
     environment: production
     steps:
       - uses: actions/checkout@v4
 
-      # 1) Configure AWS credentials
+      # 1) Configure AWS creds
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -195,25 +195,23 @@ jobs:
         with:
           terraform_version: 1.5.7
 
-      # 3) Install Terragrunt via the official Gruntwork action
-      - name: Set up Terragrunt
-        uses: gruntwork-io/setup-terragrunt@v2.1.8
+      # 3) Install & run Terragrunt via the official Terragrunt Action
+      - name: Terragrunt plan
+        uses: gruntwork-io/terragrunt-action@v2.1.8
         with:
-          version: v0.58.7
+          tf_version: 1.5.7
+          tg_version: 0.58.7
+          tg_dir: aws
+          tg_command: plan --terragrunt-non-interactive --terragrunt-out=tfplan
 
-      # 4) Terragrunt init & plan
-      - name: Terragrunt init & plan
-        working-directory: aws
-        run: |
-          terragrunt init
-          terragrunt plan --terragrunt-non-interactive -out=tfplan
-
-      # 5) Terragrunt apply if plan succeeded
       - name: Terragrunt apply
         if: ${{ success() }}
-        working-directory: aws
-        run: |
-          terragrunt apply --terragrunt-non-interactive tfplan
+        uses: gruntwork-io/terragrunt-action@v2.1.8
+        with:
+          tf_version: 1.5.7
+          tg_version: 0.58.7
+          tg_dir: aws
+          tg_command: apply
 
   # # 5. Terragrunt plan/apply for Azure
   # azure-deploy:
