@@ -33,7 +33,7 @@ jobs:
   # 2. Lint & fmt check
   lint:
     name: Terraform Lint & Format
-    needs: setup
+    # needs: setup
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
@@ -112,7 +112,7 @@ jobs:
   # 6. Post-deployment verification
   verify:
     name: Verify Buckets Exist
-    needs: [aws-deploy, azure-deploy]
+    # needs: [aws-deploy, azure-deploy]
     runs-on: self-hosted
     steps:
       - name: Checkout
@@ -130,7 +130,7 @@ jobs:
   rollback:
     name: Rollback on Failure
     if: failure()
-    needs: [aws-deploy, azure-deploy]
+    # needs: [aws-deploy, azure-deploy]
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
