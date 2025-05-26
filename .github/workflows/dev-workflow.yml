@@ -181,34 +181,57 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # 1) Configure AWS creds
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region:            us-east-1
 
-      - name: Setup Terraform
-        id: terraform
+      # 2) Install Terraform via HashiCorp’s action
+      - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.5.7
-      - name: Install Terragrun
+
+      # 3) Install Terragrunt (detects x86_64 vs. ARM64)
+      - name: Install Terragrunt v0.58.7
         run: |
-          # Terragrunt (if you also use Terragrunt in other jobs)
-          curl -Lo terragrunt \
-            https://github.com/gruntwork-io/terragrunt/releases/download/v0.54.1/terragrunt-linux-amd64
-          chmod +x terragrunt && sudo mv terragrunt /usr/local/bin/
+          #!/bin/bash
+          set -eux
+
+          # Detect architecture
+          ARCH=$(uname -m)
+          if [[ "$ARCH" == "x86_64" ]]; then
+              PLATFORM="linux_amd64"
+          elif [[ "$ARCH" == "aarch64" ]]; then
+              PLATFORM="linux_arm64"
+          else
+              echo "Unsupported architecture: $ARCH"
+              exit 1
+          fi
+
+          # Download Terragrunt
+          TERRAGRUNT_VERSION="v0.58.7"
+          wget -qO terragrunt_${PLATFORM} \
+            https://github.com/gruntwork-io/terragrunt/releases/download/${TERRAGRUNT_VERSION}/terragrunt_${PLATFORM}
+
+          # Install
+          chmod +x terragrunt_${PLATFORM}
+          sudo mv terragrunt_${PLATFORM} /usr/local/bin/terragrunt
+
+          # Verify
           terragrunt -v
 
-      # 4) Initialize & plan with Terragrunt in your aws/ folder
+      # 4) Terragrunt init & plan
       - name: Terragrunt init & plan
         working-directory: aws
         run: |
           terragrunt init
           terragrunt plan --terragrunt-non-interactive -out=tfplan
 
-      # 5) Apply if the plan succeeded
+      # 5) Terragrunt apply if plan succeeded
       - name: Terragrunt apply
         if: ${{ success() }}
         working-directory: aws
