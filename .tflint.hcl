@@ -1,15 +1,16 @@
 # .tflint.hcl (at repo root)
 
+
 plugin "aws" {
   enabled = true
   source  = "github.com/terraform-linters/tflint-ruleset-aws"
   version = "0.13.0"
 }
 
-plugin "azure" {
+plugin "azurerm" {
   enabled = true
-  source  = "github.com/terraform-linters/tflint-ruleset-azure"
-  version = "0.14.0"
+  source  = "github.com/terraform-linters/tflint-ruleset-azurerm"
+  version = "0.28.0"
 }
 
 # Built-in Terraform rules
