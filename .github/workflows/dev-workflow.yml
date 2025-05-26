@@ -167,7 +167,7 @@ jobs:
       - name: Terraform validate
         run: |
           cd ${{ matrix.module }}
-          terraform init -backend=false
+          terraform init -backend=false -upgrade
           terraform validate
 
 
