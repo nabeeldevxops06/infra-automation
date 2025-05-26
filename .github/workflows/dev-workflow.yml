@@ -20,6 +20,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y unzip curl
+
       - name: Setup Terraform
         id: terraform
         uses: hashicorp/setup-terraform@v2
@@ -36,6 +41,11 @@ jobs:
     # needs: setup
     runs-on: self-hosted
     steps:
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y unzip curl
+          
       - uses: actions/checkout@v4
       - name: Install tflint
         run: |
