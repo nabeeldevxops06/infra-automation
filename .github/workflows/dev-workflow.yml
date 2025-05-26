@@ -43,7 +43,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Install system deps needed by TFLint script
       - name: Install deps
         run: |
           sudo apt-get update
@@ -53,11 +52,15 @@ jobs:
         run: |
           curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | sudo bash
 
-      - name: tflint
-        run: tflint --config=${{ env.TFLINT_CONFIG }} ./aws ./azure
+      - name: TFLint AWS module
+        run: tflint --chdir=aws --config=.tflint.hcl
 
-      - name: terraform fmt
+      # - name: TFLint Azure module
+      #   run: tflint --chdir=azure --config=.tflint.hcl
+
+      - name: Terraform fmt
         run: terraform fmt -check -recursive
+
 
 
 #   # 3. SonarQube Scan
@@ -78,6 +81,7 @@ jobs:
   aws-deploy:
     name: AWS Bucket Provisioning
     # needs: [setup, lint, sonar]
+    needs: [setup, lint]
     runs-on: self-hosted
     environment: production
     steps:
@@ -126,6 +130,7 @@ jobs:
   verify:
     name: Verify Buckets Exist
     # needs: [aws-deploy, azure-deploy]
+    needs: [aws-deploy]
     runs-on: self-hosted
     steps:
       - name: Checkout
@@ -144,6 +149,7 @@ jobs:
     name: Rollback on Failure
     if: failure()
     # needs: [aws-deploy, azure-deploy]
+    needs: [aws-deploy]
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
