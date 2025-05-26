@@ -215,11 +215,15 @@ jobs:
       - name: Verify Terragrunt
         run: terragrunt -v
 
-      - name: Terragrunt init & plan
+      - name: Terragrunt init & plan (with debug)
         working-directory: aws
+        env:
+          TG_LOG: DEBUG
         run: |
-          terragrunt init
-          terragrunt plan --terragrunt-non-interactive -out=tfplan
+          set -eux
+          terragrunt init --terragrunt-non-interactive
+          terragrunt plan --terragrunt-non-interactive --terragrunt-out=tfplan
+
 
       - name: Terragrunt apply
         if: ${{ success() }}
