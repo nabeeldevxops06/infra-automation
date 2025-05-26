@@ -229,6 +229,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y unzip curl
+
+      - name: Setup Terraform
+        id: terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.7
+      - name: Install Terragrunt & TFLint
+        run: |
+          # Terragrunt (if you also use Terragrunt in other jobs)
+          curl -Lo terragrunt \
+            https://github.com/gruntwork-io/terragrunt/releases/download/v0.54.1/terragrunt-linux-amd64
+          chmod +x terragrunt && sudo mv terragrunt /usr/local/bin/
+
       - name: Verify AWS buckets
         run: |
           aws s3 ls | grep my-aws-bucket || { echo "AWS bucket missing"; exit 1; }

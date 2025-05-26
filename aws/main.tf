@@ -15,14 +15,9 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 4.70"       # pin to whatever major version you're using
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.5"
+      version = ">= 4.70, < 6.0"   # allow up through the v5 series
     }
   }
-  # optional: lock Terraform CLI version too
   required_version = ">= 1.5.7"
 }
 
