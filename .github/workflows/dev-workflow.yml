@@ -188,17 +188,18 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      # 2) Install Terraform via HashiCorp’s action
-      - name: Set up Terraform
+      - name: Setup Terraform
+        id: terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.5.7
-
-      # 3) Install Terragrunt via the community action
-      - name: Set up Terragrunt
-        uses: gruntwork-io/setup-terragrunt@v0.1.3
-        with:
-          version: v0.54.1
+      - name: Install Terragrun
+        run: |
+          # Terragrunt (if you also use Terragrunt in other jobs)
+          curl -Lo terragrunt \
+            https://github.com/gruntwork-io/terragrunt/releases/download/v0.54.1/terragrunt-linux-amd64
+          chmod +x terragrunt && sudo mv terragrunt /usr/local/bin/
+          terragrunt -v
 
       # 4) Initialize & plan with Terragrunt in your aws/ folder
       - name: Terragrunt init & plan
