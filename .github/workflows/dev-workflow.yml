@@ -40,98 +40,141 @@ jobs:
           curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh \
             | sudo bash
 
-  # 2. Lint & fmt check
-  lint-aws:
-    name: Lint & Validate AWS Module
+#   # 2. Lint & fmt check
+#   lint-aws:
+#     name: Lint & Validate AWS Module
+#     runs-on: ubuntu-latest
+#     needs: setup
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
+
+#       - name: Install system deps & TFLint
+#         run: |
+#           sudo apt-get update
+#           sudo apt-get install -y curl unzip
+#           curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh \
+#             | sudo bash
+
+#       - name: TFLint AWS init
+#         run: |
+#           tflint \
+#             --chdir=aws \
+#             --config=$GITHUB_WORKSPACE/.tflint.hcl \
+#             --init
+
+#       - name: TFLint AWS scan
+#         run: |
+#           tflint \
+#             --chdir=aws \
+#             --config=$GITHUB_WORKSPACE/.tflint.hcl
+
+#       - name: Terraform validate (AWS)
+#         run: |
+#           cd aws
+#           terraform init -backend=false
+#           terraform validate
+
+#   lint-azure:
+#     name: Lint & Validate Azure Module
+#     runs-on: ubuntu-latest
+#     needs: setup
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
+
+#       - name: Install system deps & TFLint
+#         run: |
+#           sudo apt-get update
+#           sudo apt-get install -y curl unzip
+#           curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh \
+#             | sudo bash
+
+#       - name: TFLint Azure init
+#         run: |
+#           tflint \
+#             --chdir=azure \
+#             --config=$GITHUB_WORKSPACE/.tflint.hcl \
+#             --init
+
+#       - name: TFLint Azure scan
+#         run: |
+#           tflint \
+#             --chdir=azure \
+#             --config=$GITHUB_WORKSPACE/.tflint.hcl
+
+#       # - name: Terraform validate (Azure)
+#       #   run: |
+#       #     cd azure
+#       #     terraform init -backend=false
+#       #     terraform validate
+
+
+
+
+
+# #   # 3. SonarQube Scan
+# #   sonar:
+# #     name: SonarQube Analysis
+# #     needs: [setup, lint]
+# #     runs-on: self-hosted
+# #     steps:
+# #       - uses: actions/checkout@v4
+# #       - name: SonarQube Scan
+# #         uses: sonarsource/sonarcloud-github-action@v1
+# #         with:
+# #           projectKey: your-org_multicloud-terragrun t
+# #           organization: your-org
+# #           token: ${{ secrets.SONAR_TOKEN }}
+
+#   # 4. Terragrunt plan/apply for AWS
+  
+
+  lint:
     runs-on: ubuntu-latest
     needs: setup
+    strategy:
+      matrix:
+        module: [aws, azure]
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Install system deps & TFLint
+      - name: Install system deps & TFLint & Terraform
         run: |
           sudo apt-get update
           sudo apt-get install -y curl unzip
+          # Terraform
+          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+          sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+          sudo apt-get update && sudo apt-get install -y terraform
+          # TFLint
           curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh \
             | sudo bash
 
-      - name: TFLint AWS init
+      - name: Initialize TFLint plugins
         run: |
           tflint \
-            --chdir=aws \
+            --chdir=${{ matrix.module }} \
             --config=$GITHUB_WORKSPACE/.tflint.hcl \
             --init
 
-      - name: TFLint AWS scan
+      - name: TFLint scan
         run: |
           tflint \
-            --chdir=aws \
+            --chdir=${{ matrix.module }} \
             --config=$GITHUB_WORKSPACE/.tflint.hcl
 
-      - name: Terraform validate (AWS)
+      - name: Terraform validate
         run: |
-          cd aws
+          cd ${{ matrix.module }}
           terraform init -backend=false
           terraform validate
 
-  lint-azure:
-    name: Lint & Validate Azure Module
-    runs-on: ubuntu-latest
-    needs: setup
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
 
-      - name: Install system deps & TFLint
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y curl unzip
-          curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh \
-            | sudo bash
-
-      - name: TFLint Azure init
-        run: |
-          tflint \
-            --chdir=azure \
-            --config=$GITHUB_WORKSPACE/.tflint.hcl \
-            --init
-
-      - name: TFLint Azure scan
-        run: |
-          tflint \
-            --chdir=azure \
-            --config=$GITHUB_WORKSPACE/.tflint.hcl
-
-      # - name: Terraform validate (Azure)
-      #   run: |
-      #     cd azure
-      #     terraform init -backend=false
-      #     terraform validate
-
-
-
-
-
-#   # 3. SonarQube Scan
-#   sonar:
-#     name: SonarQube Analysis
-#     needs: [setup, lint]
-#     runs-on: self-hosted
-#     steps:
-#       - uses: actions/checkout@v4
-#       - name: SonarQube Scan
-#         uses: sonarsource/sonarcloud-github-action@v1
-#         with:
-#           projectKey: your-org_multicloud-terragrun t
-#           organization: your-org
-#           token: ${{ secrets.SONAR_TOKEN }}
-
-  # 4. Terragrunt plan/apply for AWS
   aws-deploy:
     name: AWS Bucket Provisioning
     # needs: [setup, lint, sonar]
-    needs: [setup, lint-aws]
+    needs: [setup, lint]
     runs-on: self-hosted
     environment: production
     steps:
