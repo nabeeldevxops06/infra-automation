@@ -172,7 +172,7 @@ jobs:
 
 
       # needs: [setup, lint,sona]
-
+      
   aws-deploy:
     name: AWS Bucket Provisioning
     needs: [setup, lint]
@@ -181,7 +181,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # 1) Configure AWS creds
+      # 1) Configure AWS credentials
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -189,40 +189,17 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region:            us-east-1
 
-      # 2) Install Terraform via HashiCorp’s action
+      # 2) Install Terraform
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.5.7
 
-      # 3) Install Terragrunt (detects x86_64 vs. ARM64)
-      - name: Install Terragrunt v0.58.7
-        run: |
-          #!/bin/bash
-          set -eux
-
-          # Detect architecture
-          ARCH=$(uname -m)
-          if [[ "$ARCH" == "x86_64" ]]; then
-              PLATFORM="linux_amd64"
-          elif [[ "$ARCH" == "aarch64" ]]; then
-              PLATFORM="linux_arm64"
-          else
-              echo "Unsupported architecture: $ARCH"
-              exit 1
-          fi
-
-          # Download Terragrunt
-          TERRAGRUNT_VERSION="v0.58.7"
-          wget -qO terragrunt_${PLATFORM} \
-            https://github.com/gruntwork-io/terragrunt/releases/download/${TERRAGRUNT_VERSION}/terragrunt_${PLATFORM}
-
-          # Install
-          chmod +x terragrunt_${PLATFORM}
-          sudo mv terragrunt_${PLATFORM} /usr/local/bin/terragrunt
-
-          # Verify
-          terragrunt -v
+      # 3) Install Terragrunt via the official Gruntwork action
+      - name: Set up Terragrunt
+        uses: gruntwork-io/setup-terragrunt@v2.1.8
+        with:
+          version: v0.58.7
 
       # 4) Terragrunt init & plan
       - name: Terragrunt init & plan
