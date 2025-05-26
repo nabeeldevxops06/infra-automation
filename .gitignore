@@ -1,0 +1,20 @@
+# Terraform & Terragrunt state and cache
+*.tfstate
+*.tfstate.*
+.terragrunt-cache/
+
+# Crash logs, override files, plan files
+crash.log
+override.tf
+override.tf.json
+*_plan.out
+
+# Sensitive override vars
+*.tfvars
+*.tfvars.json
+
+# Editor / OS files
+*.swp
+.DS_Store
+.idea/
+.vscode/

@@ -1,0 +1,167 @@
+name: Multicloud Terragrunt Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  TFLINT_CONFIG: .tflint.hcl
+
+jobs:
+  # 1. Checkout & Terraform/Terragrunt setup
+  setup:
+    name: Checkout + Setup
+    runs-on: self-hosted
+    outputs:
+      tf-version: ${{ steps.terraform.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        id: terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.7
+      - name: Install Terragrunt
+        run: |
+          curl -Lo terragrunt https://github.com/gruntwork-io/terragrunt/releases/download/v0.54.1/terragrunt-linux-amd64
+          chmod +x terragrunt && sudo mv terragrunt /usr/local/bin/
+
+  # 2. Lint & fmt check
+  lint:
+    name: Terraform Lint & Format
+    needs: setup
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tflint
+        run: |
+          curl -sL https://github.com/terraform-linters/tflint/releases/download/v0.43.2/tflint_linux_amd64.zip -o tflint.zip
+          unzip tflint.zip && sudo mv tflint /usr/local/bin
+      - name: tflint
+        run: tflint --config=${{ env.TFLINT_CONFIG }} ./aws ./azure
+      - name: terraform fmt
+        run: |
+          terraform fmt -check -recursive
+
+#   # 3. SonarQube Scan
+#   sonar:
+#     name: SonarQube Analysis
+#     needs: [setup, lint]
+#     runs-on: self-hosted
+#     steps:
+#       - uses: actions/checkout@v4
+#       - name: SonarQube Scan
+#         uses: sonarsource/sonarcloud-github-action@v1
+#         with:
+#           projectKey: your-org_multicloud-terragrun t
+#           organization: your-org
+#           token: ${{ secrets.SONAR_TOKEN }}
+
+  # 4. Terragrunt plan/apply for AWS
+  aws-deploy:
+    name: AWS Bucket Provisioning
+    # needs: [setup, lint, sonar]
+    runs-on: self-hosted
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - name: Terragrunt init & plan
+        run: |
+          cd aws/storage
+          terragrunt init
+          terragrunt plan --terragrunt-non-interactive -out=tfplan
+      - name: Terragrunt apply
+        id: aws_apply
+        run: |
+          cd aws/storage
+          terragrunt apply --terragrunt-non-interactive tfplan
+
+  # # 5. Terragrunt plan/apply for Azure
+  # azure-deploy:
+  #   name: Azure Bucket Provisioning
+  #   needs: aws-deploy
+  #   runs-on: self-hosted
+  #   environment: production
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Azure Login
+  #       uses: azure/login@v1
+  #       with:
+  #         creds: ${{ secrets.AZURE_CREDENTIALS }}
+  #     - name: Terragrunt init & plan
+  #       run: |
+  #         cd azure/storage
+  #         terragrunt init
+  #         terragrunt plan --terragrunt-non-interactive -out=tfplan
+  #     - name: Terragrunt apply
+  #       id: azure_apply
+  #       run: |
+  #         cd azure/storage
+  #         terragrunt apply --terragrunt-non-interactive tfplan
+
+  # 6. Post-deployment verification
+  verify:
+    name: Verify Buckets Exist
+    needs: [aws-deploy, azure-deploy]
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify AWS buckets
+        run: |
+          aws s3 ls | grep my-aws-bucket || { echo "AWS bucket missing"; exit 1; }
+
+      # - name: Verify Azure Storage
+      #   run: |
+      #     az storage account list --query "[?name=='mystorageacct']" -o table || { echo "Azure storage missing"; exit 1; }
+
+  # 7. Rollback on failure
+  rollback:
+    name: Rollback on Failure
+    if: failure()
+    needs: [aws-deploy, azure-deploy]
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rollback AWS
+        run: |
+          cd aws/storage
+          terragrunt destroy --terragrunt-non-interactive -auto-approve
+
+      # - name: Rollback Azure
+      #   run: |
+      #     cd azure/storage
+      #     terragrunt destroy --terragrunt-non-interactive -auto-approve
+
+      - name: Confirm Rollback
+        run: |
+          echo "AWS buckets after rollback:"
+          aws s3 ls
+          # echo "Azure storage after rollback:"
+          # az storage account list --query "[].name"
+
+#   # 8. Monitor Pipeline Execution (Slack Notification)
+#   notify:
+#     name: Notify via Slack
+#     if: always()
+#     needs: [verify, rollback]
+#     runs-on: self-hosted
+#     steps:
+#       - name: Send Slack notification
+#         uses: rtCamp/action-slack-notify@v2
+#         with:
+#           webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+#           status: ${{ job.status }}
+#           fields: repo,commit,message
