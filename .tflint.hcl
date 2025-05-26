@@ -1,4 +1,3 @@
-# .tflint.hcl (at repo root)
 
 # .tflint.hcl
 
