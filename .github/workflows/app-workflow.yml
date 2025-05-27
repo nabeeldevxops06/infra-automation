@@ -2,7 +2,9 @@ name: Deploy React App via SSH Deploy Key
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
   deploy:
