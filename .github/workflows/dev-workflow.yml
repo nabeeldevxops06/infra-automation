@@ -231,11 +231,14 @@ jobs:
         run: |
           set -eux
           terragrunt init --terragrunt-non-interactive
-          terragrunt plan --terragrunt-non-interactive --terragrunt-out=tfplan
+          terragrunt plan --terragrunt-non-interactive -out=tfplan
+
 
 
 
       - name: Terragrunt apply
+        env:
+          TERRAGRUNT_TFPATH: /usr/local/bin/terraform
         if: ${{ success() }}
         working-directory: aws
         run: terragrunt apply --auto-approve
