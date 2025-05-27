@@ -7,35 +7,35 @@ on:
   workflow_dispatch:
 
 jobs:
-sonar:
-  name: SonarQube Analysis
-  runs-on: [ self-hosted ]
-  steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
+  sonar:
+    name: SonarQube Analysis
+    runs-on: [ self-hosted ]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-    - name: Setup Java
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'temurin'
-        java-version: '11'
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '11'
 
-    - name: SonarQube Scan
-      uses: SonarSource/sonarqube-scan-action@v2
-      with:
-        projectBaseDir: .
-        extraProperties: |
-          sonar.sources=.
-          sonar.projectKey=infra-automation
-      env:
-        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        SONAR_TOKEN:     ${{ secrets.SONAR_TOKEN }}
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v2
+        with:
+          projectBaseDir: .
+          extraProperties: |
+            sonar.sources=.
+            sonar.projectKey=infra-automation
+        env:
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_TOKEN:     ${{ secrets.SONAR_TOKEN }}
 
-    - name: Quality Gate Check
-      uses: SonarSource/sonarqube-quality-gate-action@v1
-      env:
-        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        SONAR_TOKEN:     ${{ secrets.SONAR_TOKEN }}
+      - name: Quality Gate Check
+        uses: SonarSource/sonarqube-quality-gate-action@v1
+        env:
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_TOKEN:     ${{ secrets.SONAR_TOKEN }}
 
   deploy:
     name: Deploy React App via SSH
