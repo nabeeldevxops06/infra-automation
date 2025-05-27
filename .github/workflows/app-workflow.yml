@@ -51,10 +51,17 @@ jobs:
 
       # … previous steps …
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
+        # 1. Install Node.js & npm globally 
+      - name: Install Node.js & npm via NodeSource
+        run: |
+            curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -   # add NodeSource PPA :contentReference[oaicite:5]{index=5}
+            sudo apt-get install -y nodejs                                     # installs /usr/bin/node & npm :contentReference[oaicite:6]{index=6}
+
+        # 2. Globally install PM2 for all users
+      - name: Install PM2 globally
+        run: |
+            sudo npm install -g pm2                                            # places pm2 in /usr/bin :contentReference[oaicite:7]{index=7}
+
 
       - name: Install dependencies & build
         run: |
@@ -65,13 +72,10 @@ jobs:
           npm run build
   
 
-      - name: Install PM2, serve & enable on boot
+      # 6. Serve with PM2 and configure auto-start
+      - name: Serve & enable PM2 on boot
         run: |
-            npm install -g pm2
-            pm2 stop react-app || true
-            pm2 serve /home/ubuntu/infra-automation/digital-name-card-main/build \
-                --name react-app --spa --port 3000
-            pm2 save
-            # register the systemd startup script so PM2 restarts on reboot
-            sudo env PATH=$PATH:/home/ubuntu/actions-runner/_work/_tool/node/18.20.8/x64/bin \
-                pm2 startup systemd -u ubuntu --hp /home/ubuntu
+          pm2 stop react-app || true
+          pm2 serve build --name react-app --spa --port 3000               # serve build folder 
+          pm2 save                                                         # snapshot the process list 
+          sudo pm2 startup systemd -u ubuntu --hp /home/ubuntu             # generate and enable systemd unit :contentReference[oaicite:16]{index=16}
