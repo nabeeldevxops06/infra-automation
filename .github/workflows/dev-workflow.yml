@@ -269,12 +269,15 @@ jobs:
 
       - name: Delete existing Resource Group
         run: |
-          set -eux
-          # delete infra-auto-rg if it exists
-          if az group exists --name infra-auto-rg; then
-            az group delete --name infra-auto-rg --yes --no-wait
-            az group wait --name infra-auto-rg --deleted
-          fi
+            set -eux
+            # delete infra-auto-rg if it exists
+            exists=$(az group exists --name infra-auto-rg)
+            if [ "$exists" = "true" ]; then
+              az group delete --name infra-auto-rg --yes --no-wait
+              az group wait --name infra-auto-rg --deleted
+            else
+              echo "Resource group infra-auto-rg not found; skipping delete."
+            fi
   
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
@@ -441,3 +444,9 @@ jobs:
 #           webhook_url: ${{ secrets.SLACK_WEBHOOK }}
 #           status: ${{ job.status }}
 #           fields: repo,commit,message
+
+
+
+
+
+
