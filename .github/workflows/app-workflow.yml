@@ -57,10 +57,13 @@ jobs:
           node-version: '18'
 
       - name: Install dependencies & build
-        working-directory: ${{ github.workspace }}/Dev-nabeel.devxops-gmail.com/digital-name-card-main
         run: |
+          pwd
+          ls -la
+          cd /home/ubuntu/infra-automation/digital-name-card-main
           npm ci
           npm run build
+  
 
       - name: Install PM2 globally
         run: |
