@@ -11,34 +11,34 @@ env:
 
 jobs:
   # 1. Checkout & Terraform/Terragrunt setup
-  setup:
-    name: Checkout + Setup
-    runs-on: self-hosted
-    outputs:
-      tf-version: ${{ steps.terraform.outputs.version }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  # setup:
+  #   name: Checkout + Setup
+  #   runs-on: self-hosted
+  #   outputs:
+  #     tf-version: ${{ steps.terraform.outputs.version }}
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y unzip curl
+  #     - name: Install system dependencies
+  #       run: |
+  #         sudo apt-get update
+  #         sudo apt-get install -y unzip curl
 
-      - name: Setup Terraform
-        id: terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.5.7
-      - name: Install Terragrunt & TFLint
-        run: |
-          # Terragrunt (if you also use Terragrunt in other jobs)
-          curl -Lo terragrunt \
-            https://github.com/gruntwork-io/terragrunt/releases/download/v0.54.1/terragrunt-linux-amd64
-          chmod +x terragrunt && sudo mv terragrunt /usr/local/bin/
-          # TFLint installer
-          curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh \
-            | sudo bash
+  #     - name: Setup Terraform
+  #       id: terraform
+  #       uses: hashicorp/setup-terraform@v2
+  #       with:
+  #         terraform_version: 1.5.7
+  #     - name: Install Terragrunt & TFLint
+  #       run: |
+  #         # Terragrunt (if you also use Terragrunt in other jobs)
+  #         curl -Lo terragrunt \
+  #           https://github.com/gruntwork-io/terragrunt/releases/download/v0.54.1/terragrunt-linux-amd64
+  #         chmod +x terragrunt && sudo mv terragrunt /usr/local/bin/
+  #         # TFLint installer
+  #         curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh \
+  #           | sudo bash
 
 #   # 2. Lint & fmt check
 #   lint-aws:
@@ -175,9 +175,11 @@ jobs:
 
   aws-deploy:
     name: AWS Bucket Provisioning
-    needs: [setup]
+    # needs: [setup]
     runs-on: self-hosted
     environment: production
+    env:
+      TERRAFORM_CLI_PATH: /usr/local/bin/terraform
     steps:
       - uses: actions/checkout@v4
 
