@@ -42,15 +42,6 @@ jobs:
           rm -rf ~/infra-automation
           git clone https://github.com/nabeeldevxops06/infra-automation.git ~/infra-automation
 
-    #   # 5. Unzip the application package inside that repo
-    #   - name: Unzip application package
-    #     run: |
-    #       cd ~/infra-automation
-    #       unzip digital-name-card-main.zip
-    #       rm digital-name-card-main.zip
-
-      # … previous steps …
-
         # 1. Install Node.js & npm globally 
       - name: Install Node.js & npm via NodeSource
         run: |

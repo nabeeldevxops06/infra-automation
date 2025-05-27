@@ -1,0 +1,87 @@
+name: CI & Deploy React App
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+sonar:
+  name: SonarQube Analysis
+  runs-on: [ self-hosted ]
+  steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Setup Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '11'
+
+    - name: SonarQube Scan
+      uses: SonarSource/sonarqube-scan-action@v2
+      with:
+        projectBaseDir: .
+        extraProperties: |
+          sonar.sources=.
+          sonar.projectKey=infra-automation
+      env:
+        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        SONAR_TOKEN:     ${{ secrets.SONAR_TOKEN }}
+
+    - name: Quality Gate Check
+      uses: SonarSource/sonarqube-quality-gate-action@v1
+      env:
+        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        SONAR_TOKEN:     ${{ secrets.SONAR_TOKEN }}
+
+  deploy:
+    name: Deploy React App via SSH
+    runs-on: [ self-hosted ]
+    needs: sonar
+
+    steps:
+      - name: Install Git & Unzip
+        run: |
+          if ! command -v git &> /dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y git
+          fi
+          if ! command -v unzip &> /dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y unzip
+          fi
+
+      - name: Load SSH deploy key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add GitHub to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Clone repository via SSH
+        run: |
+          rm -rf ~/infra-automation
+          git clone git@github.com:nabeeldevxops06/infra-automation.git ~/infra-automation
+
+      - name: Install Node.js & npm via NodeSource
+        run: |
+          curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+          sudo apt-get install -y nodejs
+
+      - name: Install PM2 globally
+        run: sudo npm install -g pm2
+
+      - name: Install dependencies & launch with PM2
+        run: |
+          cd /home/ubuntu/infra-automation/digital-name-card-main
+          npm install
+          pm2 start npm --name "digital-name-card" -- start
+          pm2 save
+          pm2 list
