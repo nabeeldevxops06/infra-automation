@@ -1,0 +1,194 @@
+@import url(https://fonts.googleapis.com/css?family=Anonymous+Pro);
+
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.main {
+  background-color: #4d4558;
+  padding: 3.3125em 4em;
+}
+
+.main_section {
+  background-color: rgb(44, 43, 53);
+  max-width: 19.8125rem;
+  display: flex;
+  margin-inline: auto;
+  flex-direction: column;
+  border-radius: 5px 5px 5px 5px;
+}
+
+.text {
+  font-size: x-small;
+  color: rgb(225, 224, 227);
+  font-weight: 350;
+  margin-top: 0.5em;
+}
+
+.about_text, .interest_text{
+  color: rgb(225, 224, 227);
+  font-size: medium;
+  font-weight: 700;
+  margin-bottom: 0em;
+}
+
+.about_section, .interest_section {
+  padding: 0em 1.7em;
+  margin-inline: auto;
+}
+
+.image {
+  margin-bottom: 1.5em;
+}
+
+.profile_section {
+  padding: 0em 1em;
+  text-align: center;
+  margin-inline: auto;
+}
+
+.title {
+  color: bisque;
+  font-size: x-small;
+  margin-top: 0.5em;
+}
+
+.name {
+  color: rgb(225, 224, 227);
+  font-size: x-large;
+  font-weight: 800;
+  margin-top: 0em;
+  margin-bottom: 0em;
+}
+
+.email a {
+  background-color: rgb(225, 224, 227);
+  display: inline-block;
+  border-radius: 2px;
+  padding-right: 7px;
+  padding-left: 7px;
+  padding-top: 4px;
+  padding-bottom: 3px;
+  box-shadow: #4d4558;
+  font-weight: 700;
+  font-size: 0.8em;
+}
+
+.email {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.email > *:where(:not(:first-child)) {
+  margin-left: var(--flow-space, 1.3rem);
+}
+
+.email a:last-child{
+  background: rgb(225, 224, 227);
+  color:   #4d4558;
+}
+.email a:first-child{
+  background: rgb(225, 224, 227);
+  color:   #4d4558;
+}
+
+.icon {
+  vertical-align: middle;
+  margin-right: 7.7px;
+  flex-shrink: 0;
+  width: 17px;
+  height: 17px;
+  color:  #4d4558;
+}
+
+.l_icon {
+  vertical-align: middle;
+  margin-right: 7.7px;
+  flex-shrink: 0;
+  width: 17px;
+  height: 17px;
+  color:  #4d4558;
+}
+
+.email_text {
+  color:  #4d4558
+}
+
+.l_text {
+  color:  #4d4558;
+}
+
+.footer {
+  background: rgb(28, 28, 29);
+  border-radius: 0px 0px 10px 10px;
+  padding: 1em 0em;
+  margin-top: 0.5em;
+  display: flex;
+}
+
+.animated_text{
+  font-size: small;
+  color: rgb(225, 224, 227);
+  /*font-family: "Anonymous Pro", monospace!important;*/
+  overflow: hidden;
+  border-right: 2px solid rgb(225, 224, 227);
+  white-space: nowrap;
+  animation: typewriter 4s steps(20) 1s 1 normal both,
+    blinkTextCursor 700ms infinite;
+  padding-left: 17px;
+  margin-top: 3px;
+}
+
+@keyframes typewriter {
+  from {
+    width: 0;
+  }
+  to {
+    width: 125px;
+  }
+}
+@keyframes blinkTextCursor {
+  from {
+    border-right-color: rgb(225, 224, 227);
+  }
+  to {
+    border-right-color: transparent;
+  }
+}
+
+

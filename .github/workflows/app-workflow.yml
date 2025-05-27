@@ -1,0 +1,61 @@
+
+
+name: Deploy React App on EC2
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: [ self-hosted]
+
+    steps:
+      - name: Install Git & Unzip
+        run: |
+          if ! command -v git &> /dev/null; then
+            sudo apt-get update && sudo apt-get install -y git  
+          fi
+          if ! command -v unzip &> /dev/null; then
+            sudo apt-get update && sudo apt-get install -y unzip
+          fi
+
+      - name: Clone repository
+        run: | 
+          cd ~
+          git clone git@github.com:AI-Elites/Dev-nabeel.devxops-gmail.com.git
+
+          cd Dev-nabeel.devxops-gmail.com
+          unzip digital-name-card-main.zip
+          cd digital-name-card-main
+
+
+    #   - name: Unzip application package
+    #     run: |
+    #       cd ~/app
+    #       ZIP_FILE=$(ls *.zip | head -n1)      # pick the first .zip
+    #       unzip "$ZIP_FILE" -d .               # extract into current dir :contentReference[oaicite:3]{index=3}
+    #       rm "$ZIP_FILE"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3       # installs Node.js on the runner :contentReference[oaicite:4]{index=4}
+        with:
+          node-version: '18'
+
+      - name: Install dependencies & build
+        working-directory: ~/Dev-nabeel.devxops-gmail.com/digital-name-card-main
+        run: |
+          npm ci          # fast, reproducible installs in CI :contentReference[oaicite:5]{index=5}
+          npm run build   # optional: build production bundle
+
+      - name: Install PM2 globally
+        run: |
+          sudo npm install -g pm2         # PM2 process manager :contentReference[oaicite:6]{index=6}
+
+      - name: Serve app on port 3000
+        working-directory: ~/app/build    # point to your build folder
+        run: |
+          pm2 stop react-app || true
+          pm2 serve . --name react-app --spa --port 3000  # serve SPA on 0.0.0.0:3000 :contentReference[oaicite:7]{index=7}
+          pm2 save
+          pm2 startup systemd -u $USER --hp $HOME
