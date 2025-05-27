@@ -290,6 +290,14 @@ jobs:
         run: |
           aws s3 ls | grep infra-auto-terraform || { echo "AWS bucket missing"; exit 1; }
 
+      - name: Install Azure CLI
+        run: curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
+      - name: Azure Service Principal Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}          
+          
       - name: Verify Azure Storage Accounts
         run: |
           set -eux
@@ -365,19 +373,6 @@ jobs:
           # echo "Azure storage after rollback:"
           # az storage account list --query "[].name"
 
-#   # 8. Monitor Pipeline Execution (Slack Notification)
-#   notify:
-#     name: Notify via Slack
-#     if: always()
-#     needs: [verify, rollback]
-#     runs-on: self-hosted
-#     steps:
-#       - name: Send Slack notification
-#         uses: rtCamp/action-slack-notify@v2
-#         with:
-#           webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-#           status: ${{ job.status }}
-#           fields: repo,commit,message
 
 
 
