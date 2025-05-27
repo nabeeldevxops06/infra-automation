@@ -49,30 +49,27 @@ jobs:
     #       unzip digital-name-card-main.zip
     #       rm digital-name-card-main.zip
 
-      # 6. Install Node.js (using GitHub’s action for consistency)
+      # … previous steps …
+
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-         
-      - name: Install PM2 globally (no sudo)
-        run: |
-          npm install -g pm2 
-      # 7. Install dependencies & build the React app
+
       - name: Install dependencies & build
+        working-directory: ${{ github.workspace }}/Dev-nabeel.devxops-gmail.com/digital-name-card-main
         run: |
-          pwd
-          ls -la
-          cd /home/ubuntu/infra-automation/digital-name-card-main
           npm ci
           npm run build
 
-      # 8. Install PM2 and serve the production build on port 3000
-      - name: Install PM2 & serve
+      - name: Install PM2 globally
         run: |
-          sudo npm install -g pm2
+          npm install -g pm2
+
+      - name: Serve app on port 3000
+        run: |
           pm2 stop react-app || true
-          pm2 serve /home/ubuntu/infra-automation/digital-name-card-main/build \
+          pm2 serve ${{ github.workspace }}/Dev-nabeel.devxops-gmail.com/digital-name-card-main/build \
             --name react-app --spa --port 3000
           pm2 save
           pm2 startup systemd -u $USER --hp $HOME
