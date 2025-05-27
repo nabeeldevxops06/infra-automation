@@ -1,5 +1,9 @@
 name: Multicloud Terragrunt Pipeline
 
+# 1) Grant the workflow permission to request OIDC tokens
+permissions:
+  id-token: write
+  contents: read
 on:
   push:
     branches:
