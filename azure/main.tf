@@ -37,7 +37,7 @@ resource "azurerm_resource_group" "rg" {
 }
 
 resource "azurerm_storage_account" "state" {
-  name                     = "az-storage"
+  name                     = "azstorage"
   resource_group_name      = azurerm_resource_group.rg.name
   account_tier             = "Standard"
   account_replication_type = "LRS"
@@ -46,4 +46,9 @@ resource "azurerm_storage_account" "state" {
 
 resource "random_id" "hex" {
   byte_length = 4
+}
+
+
+output "storage_account_name" {
+  value = azurerm_storage_account.state.name
 }
