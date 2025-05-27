@@ -253,6 +253,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install Azure CLI
+        run: |
+         curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
+
       - name: Azure Login
         uses: azure/login@v1
         with:
@@ -261,11 +266,8 @@ jobs:
       - name: Mark repo as safe
         run: git config --global --add safe.directory $GITHUB_WORKSPACE
       
-      - name: Install Azure CLI
-        run: |
-         curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
-         
+
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
         with:
