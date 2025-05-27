@@ -69,7 +69,7 @@ jobs:
         run: |
             npm install -g pm2
             pm2 stop react-app || true
-            pm2 serve ${{ github.workspace }}/Dev-nabeel.devxops-gmail.com/digital-name-card-main/build \
+            pm2 serve /home/ubuntu/infra-automation/digital-name-card-main/build \
                 --name react-app --spa --port 3000
             pm2 save
             # register the systemd startup script so PM2 restarts on reboot
