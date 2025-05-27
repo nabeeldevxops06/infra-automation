@@ -291,6 +291,9 @@ jobs:
 
       - name: Terragrunt init & plan (Azure)
         working-directory: azure
+        env:
+          TG_LOG: DEBUG
+          TERRAGRUNT_TFPATH: /usr/local/bin/terraform
         run: |
           terragrunt init --terragrunt-non-interactive
           terragrunt plan --terragrunt-non-interactive -out=tfplan
@@ -298,6 +301,8 @@ jobs:
       - name: Terragrunt apply (Azure)
         if: ${{ success() }}
         working-directory: azure
+        env:
+          TERRAGRUNT_TFPATH: /usr/local/bin/terraform
         run: terragrunt apply --auto-approve
 
 
