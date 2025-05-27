@@ -65,14 +65,13 @@ jobs:
           npm run build
   
 
-      - name: Install PM2 globally
+      - name: Install PM2, serve & enable on boot
         run: |
-          npm install -g pm2
-
-      - name: Serve app on port 3000
-        run: |
-          pm2 stop react-app || true
-          pm2 serve ${{ github.workspace }}/Dev-nabeel.devxops-gmail.com/digital-name-card-main/build \
-            --name react-app --spa --port 3000
-          pm2 save
-          pm2 startup systemd -u $USER --hp $HOME
+            npm install -g pm2
+            pm2 stop react-app || true
+            pm2 serve ${{ github.workspace }}/Dev-nabeel.devxops-gmail.com/digital-name-card-main/build \
+                --name react-app --spa --port 3000
+            pm2 save
+            # register the systemd startup script so PM2 restarts on reboot
+            sudo env PATH=$PATH:/home/ubuntu/actions-runner/_work/_tool/node/18.20.8/x64/bin \
+                pm2 startup systemd -u ubuntu --hp /home/ubuntu
