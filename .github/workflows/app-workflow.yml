@@ -59,6 +59,8 @@ jobs:
       - name: Install dependencies & build
         run: |
           pwd
+          ls -la
+          cd /home/ubuntu/infra-automation/digital-name-card-main
           npm ci
           npm run build
 
@@ -67,7 +69,7 @@ jobs:
         run: |
           sudo npm install -g pm2
           pm2 stop react-app || true
-          pm2 serve ~/Dev-nabeel.devxops-gmail.com/digital-name-card-main/build \
+          pm2 serve /home/ubuntu/infra-automation/digital-name-card-main/build \
             --name react-app --spa --port 3000
           pm2 save
           pm2 startup systemd -u $USER --hp $HOME
