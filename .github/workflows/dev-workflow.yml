@@ -196,6 +196,10 @@ jobs:
         with:
           terraform_version: 1.5.7
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
       - name: Install Terraform & Terragrunt
         run: |
           curl -fsSL https://releases.hashicorp.com/terraform/1.7.5/terraform_1.7.5_linux_amd64.zip -o terraform.zip
