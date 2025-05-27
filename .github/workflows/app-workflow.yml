@@ -54,7 +54,10 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-
+         
+      - name: Install PM2 globally (no sudo)
+        run: |
+          npm install -g pm2 
       # 7. Install dependencies & build the React app
       - name: Install dependencies & build
         run: |
