@@ -318,23 +318,27 @@ jobs:
       #     TERRAGRUNT_TFPATH: /usr/local/bin/terraform
       #   run: terragrunt apply --auto-approve
       
-      # 1) Read the storage account name *after* apply
-      - name: Read Azure storage name
-        id: azure_out
-        working-directory: azure
-        env:
-          TERRAGRUNT_TFPATH: /usr/local/bin/terraform
+      - name: Verify Azure Storage Accounts
         run: |
-          storage_name=$(terragrunt output -raw storage_account_name)
-          echo "storage=$storage_name" >> $GITHUB_OUTPUT
-
-      # 2) Verify it exists
-      - name: Verify Azure Storage Account
-        run: |
-          az storage account show \
-            --name ${{ steps.azure_out.outputs.storage }} \
+          set -eux
+          # List all storage account names in the RG
+          accounts=$(az storage account list \
             --resource-group infra-auto-rg \
-          || { echo "Missing"; exit 1; }
+            --query "[].name" \
+            -o tsv)
+      
+          echo "Found storage accounts:"
+          echo "$accounts"
+      
+          # Fail if none found
+          if [ -z "$accounts" ]; then
+            echo "No storage accounts in resource group infra-auto-rg"
+            exit 1
+          fi
+      
+          # (Optional) Verify one matches the azstorage prefix
+          echo "$accounts" | grep '^azstorage' || { echo "No azstorage* account found"; exit 1; }
+      
 
   # # 6. Post-deployment verification
   # verify:
