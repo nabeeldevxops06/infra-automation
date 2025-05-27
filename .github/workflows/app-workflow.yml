@@ -1,6 +1,4 @@
-
-
-name: Deploy React App on EC2
+name: Deploy React App via SSH Deploy Key
 
 on:
   push:
@@ -8,72 +6,66 @@ on:
 
 jobs:
   deploy:
-    runs-on: [ self-hosted]
+    runs-on: [ self-hosted ]
 
     steps:
-
-
+      # 1. Ensure git & unzip are available
       - name: Install Git & Unzip
         run: |
           if ! command -v git &> /dev/null; then
-            sudo apt-get update && sudo apt-get install -y git  
+            sudo apt-get update
+            sudo apt-get install -y git
           fi
           if ! command -v unzip &> /dev/null; then
-            sudo apt-get update && sudo apt-get install -y unzip
+            sudo apt-get update
+            sudo apt-get install -y unzip
           fi
 
-
-          - name: Checkout (no-op placeholder)
-          run: echo "Using SSH deploy key; skipping default checkout"
-  
+      # 2. Load your SSH deploy key into ssh-agent
       - name: Load SSH deploy key
         uses: webfactory/ssh-agent@v0.9.0
         with:
-        # Store your private key (the contents of ~/.ssh/github-deploy) in this secret
-         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}               :contentReference[oaicite:0]{index=0}
-      
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      # 3. Trust GitHub’s host key so SSH clone doesn’t prompt
       - name: Add GitHub to known_hosts
         run: |
-           mkdir -p ~/.ssh
-           ssh-keyscan github.com >> ~/.ssh/known_hosts                  
-           chmod 600 ~/.ssh/known_hosts                                  :contentReference[oaicite:2]{index=2}
+          mkdir -p ~/.ssh
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
 
-      - name: Clone repository
-        run: | 
-          cd ~
-          git clone git@github.com:AI-Elites/Dev-nabeel.devxops-gmail.com.git
+      # 4. Clone your repo via SSH into the exact directory you'll use
+      - name: Clone repository via SSH
+        run: |
+          rm -rf ~/Dev-nabeel.devxops-gmail.com
+          git clone git@github.com:AI-Elites/Dev-nabeel.devxops-gmail.com.git ~/Dev-nabeel.devxops-gmail.com
 
-          cd Dev-nabeel.devxops-gmail.com
+      # 5. Unzip the application package inside that repo
+      - name: Unzip application package
+        run: |
+          cd ~/Dev-nabeel.devxops-gmail.com
           unzip digital-name-card-main.zip
-          cd digital-name-card-main
+          rm digital-name-card-main.zip
 
-
-    #   - name: Unzip application package
-    #     run: |
-    #       cd ~/app
-    #       ZIP_FILE=$(ls *.zip | head -n1)      # pick the first .zip
-    #       unzip "$ZIP_FILE" -d .               # extract into current dir :contentReference[oaicite:3]{index=3}
-    #       rm "$ZIP_FILE"
-
+      # 6. Install Node.js (using GitHub’s action for consistency)
       - name: Set up Node.js
-        uses: actions/setup-node@v3       # installs Node.js on the runner :contentReference[oaicite:4]{index=4}
+        uses: actions/setup-node@v3
         with:
           node-version: '18'
 
+      # 7. Install dependencies & build the React app
       - name: Install dependencies & build
         working-directory: ~/Dev-nabeel.devxops-gmail.com/digital-name-card-main
         run: |
-          npm ci          # fast, reproducible installs in CI :contentReference[oaicite:5]{index=5}
-          npm run build   # optional: build production bundle
+          npm ci
+          npm run build
 
-      - name: Install PM2 globally
+      # 8. Install PM2 and serve the production build on port 3000
+      - name: Install PM2 & serve
         run: |
-          sudo npm install -g pm2         # PM2 process manager :contentReference[oaicite:6]{index=6}
-
-      - name: Serve app on port 3000
-        working-directory: ~/app/build    # point to your build folder
-        run: |
+          sudo npm install -g pm2
           pm2 stop react-app || true
-          pm2 serve . --name react-app --spa --port 3000  # serve SPA on 0.0.0.0:3000 :contentReference[oaicite:7]{index=7}
+          pm2 serve ~/Dev-nabeel.devxops-gmail.com/digital-name-card-main/build \
+            --name react-app --spa --port 3000
           pm2 save
           pm2 startup systemd -u $USER --hp $HOME
