@@ -39,15 +39,15 @@ jobs:
       # 4. Clone your repo via SSH into the exact directory you'll use
       - name: Clone repository via SSH
         run: |
-          rm -rf ~/Dev-nabeel.devxops-gmail.com
-          git clone git@github.com:AI-Elites/Dev-nabeel.devxops-gmail.com.git ~/Dev-nabeel.devxops-gmail.com
+          rm -rf ~/infra-automation
+          git clone https://github.com/nabeeldevxops06/infra-automation.git ~/infra-automation
 
-      # 5. Unzip the application package inside that repo
-      - name: Unzip application package
-        run: |
-          cd ~/Dev-nabeel.devxops-gmail.com
-          unzip digital-name-card-main.zip
-          rm digital-name-card-main.zip
+    #   # 5. Unzip the application package inside that repo
+    #   - name: Unzip application package
+    #     run: |
+    #       cd ~/infra-automation
+    #       unzip digital-name-card-main.zip
+    #       rm digital-name-card-main.zip
 
       # 6. Install Node.js (using GitHub’s action for consistency)
       - name: Set up Node.js
@@ -57,7 +57,7 @@ jobs:
 
       # 7. Install dependencies & build the React app
       - name: Install dependencies & build
-        working-directory: ~/Dev-nabeel.devxops-gmail.com/digital-name-card-main
+        working-directory: ~/infra-automation/digital-name-card-main
         run: |
           npm ci
           npm run build
