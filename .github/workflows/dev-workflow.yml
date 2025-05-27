@@ -256,18 +256,17 @@ jobs:
     environment: production
     steps:
       - uses: actions/checkout@v4
+
       - name: Install Azure CLI
-        run: curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+        run: |
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
       - name: Azure OIDC Login
         uses: azure/login@v1
         with:
-          auth-type: oidc
           client-id:       ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id:       ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      - name: Mark repo as safe
-        run: git config --global --add safe.directory $GITHUB_WORKSPACE
-      
 
 
       - name: Set up Terraform
