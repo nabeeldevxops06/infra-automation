@@ -316,6 +316,9 @@ jobs:
             https://github.com/gruntwork-io/terragrunt/releases/download/v0.54.1/terragrunt-linux-amd64
           chmod +x terragrunt && sudo mv terragrunt /usr/local/bin/
 
+      - name: Install Azure CLI
+        run: |
+         curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
