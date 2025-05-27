@@ -193,25 +193,16 @@ jobs:
         with:
           terraform_version: 1.5.7
 
-      - name: Install Terragrunt v0.58.7 (no sudo)
+      - name: Install Terragrunt
         run: |
-          set -eux
-          ARCH=$(uname -m)
-          if [[ "$ARCH" == "x86_64" ]]; then
-            PLATFORM="linux_amd64"
-          elif [[ "$ARCH" == "aarch64" ]]; then
-            PLATFORM="linux_arm64"
-          else
-            echo "Unsupported architecture: $ARCH"
-            exit 1
-          fi
-          curl -L \
-            "https://github.com/gruntwork-io/terragrunt/releases/download/v0.58.7/terragrunt_${PLATFORM}" \
-            -o terragrunt
+          curl -L -o terragrunt https://github.com/gruntwork-io/terragrunt/releases/latest/download/terragrunt_linux_amd64
           chmod +x terragrunt
-          mkdir -p $HOME/bin
-          mv terragrunt $HOME/bin/terragrunt
-          echo "$HOME/bin" >> $GITHUB_PATH
+          sudo mv terragrunt /usr/local/bin/
+
+      - name: Verify Terragrunt Version
+        run: terragrunt --version
+        
+        
       - name: Verify Terragrunt
         run: terragrunt -v
 
