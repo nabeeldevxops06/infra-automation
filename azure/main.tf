@@ -27,18 +27,19 @@ provider "azurerm" {
 }
 
 
-# resource "azurerm_resource_group" "rg" {
-#   name     = "infra-auto-rg"
-#   location = "East US"
-# }
+resource "azurerm_resource_group" "rg" {
+  name     = "infra-auto-rg"
+  location = "East US"
+}
 
-# resource "azurerm_storage_account" "state" {
-#   name                     = "infraautostate${random_id.hex}"
-#   resource_group_name      = azurerm_resource_group.rg.name
-#   account_tier             = "Standard"
-#   account_replication_type = "LRS"
-# }
+resource "azurerm_storage_account" "state" {
+  name                     = "infra-autostate-az"
+  resource_group_name      = azurerm_resource_group.rg.name
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+  location = azurerm_resource_group.rg.location
+}
 
-# resource "random_id" "hex" {
-#   byte_length = 4
-# }
+resource "random_id" "hex" {
+  byte_length = 4
+}
