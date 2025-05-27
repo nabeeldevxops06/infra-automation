@@ -267,17 +267,17 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
 
-      - name: Delete existing Resource Group
-        run: |
-            set -eux
-            # delete infra-auto-rg if it exists
-            exists=$(az group exists --name infra-auto-rg)
-            if [ "$exists" = "true" ]; then
-              az group delete --name infra-auto-rg --yes --no-wait
-              az group wait --name infra-auto-rg --deleted
-            else
-              echo "Resource group infra-auto-rg not found; skipping delete."
-            fi
+      # - name: Delete existing Resource Group
+      #   run: |
+      #       set -eux
+      #       # delete infra-auto-rg if it exists
+      #       exists=$(az group exists --name infra-auto-rg)
+      #       if [ "$exists" = "true" ]; then
+      #         az group delete --name infra-auto-rg --yes --no-wait
+      #         az group wait --name infra-auto-rg --deleted
+      #       else
+      #         echo "Resource group infra-auto-rg not found; skipping delete."
+      #       fi
   
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
@@ -302,32 +302,37 @@ jobs:
       - name: Verify Terragrunt
         run: terragrunt --version
 
-      - name: Terragrunt init & plan (Azure)
+      # - name: Terragrunt init & plan (Azure)
+      #   working-directory: azure
+      #   env:
+      #     TG_LOG: DEBUG
+      #     TERRAGRUNT_TFPATH: /usr/local/bin/terraform
+      #   run: |
+      #     terragrunt init --terragrunt-non-interactive
+      #     terragrunt plan --terragrunt-non-interactive -out=tfplan
+
+      # - name: Terragrunt apply (Azure)
+      #   if: ${{ success() }}
+      #   working-directory: azure
+      #   env:
+      #     TERRAGRUNT_TFPATH: /usr/local/bin/terraform
+      #   run: terragrunt apply --auto-approve
+      
+      - name: Read Azure storage name
+        id: azure_out
         working-directory: azure
         env:
-          TG_LOG: DEBUG
           TERRAGRUNT_TFPATH: /usr/local/bin/terraform
         run: |
-          terragrunt init --terragrunt-non-interactive
-          terragrunt plan --terragrunt-non-interactive -out=tfplan
+          storage_name=$(terragrunt output -raw storage_account_name)
+          echo "storage=$storage_name" >> $GITHUB_OUTPUT
 
-      - name: Terragrunt apply (Azure)
-        if: ${{ success() }}
-        working-directory: azure
-        env:
-          TERRAGRUNT_TFPATH: /usr/local/bin/terraform
-        run: terragrunt apply --auto-approve
-
-      - name: Read Azure storage name
-        working-directory: azure
-        id: azure_out
-        run: echo "::set-output name=storage::$(terragrunt output -raw storage_account_name)"
-      
       - name: Verify Azure Storage Account
         run: |
-          az storage account show --name ${{ steps.azure_out.outputs.storage }} || { echo "Missing"; exit 1; }
-      
-
+          az storage account show \
+            --name ${{ steps.azure_out.outputs.storage }} \
+            --resource-group infra-auto-rg \
+          || { echo "Missing"; exit 1; }
 
   # # 6. Post-deployment verification
   # verify:
