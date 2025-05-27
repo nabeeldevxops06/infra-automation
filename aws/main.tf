@@ -23,6 +23,11 @@ terraform {
     }
   }
   required_version = ">= 1.5.7"
+
+    # Use a local backend (state kept in terraform.tfstate beside your code)
+  backend "local" {
+    path = "terraform.tfstate"
+  }
 }
 
 

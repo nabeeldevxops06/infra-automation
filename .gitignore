@@ -1,6 +1,6 @@
 # Terraform & Terragrunt state and cache
-*.tfstate
-*.tfstate.*
+# *.tfstate
+# *.tfstate.*
 .terragrunt-cache/
 
 # Crash logs, override files, plan files
