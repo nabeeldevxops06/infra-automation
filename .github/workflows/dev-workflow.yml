@@ -215,15 +215,14 @@ jobs:
           TG_LOG: DEBUG
         run: |
           set -eux
-          terragrunt init --terragrunt-non-interactive
-          terragrunt plan --terragrunt-non-interactive --terragrunt-out=tfplan
+          terragrunt init
+          terragrunt plan
 
 
       - name: Terragrunt apply
         if: ${{ success() }}
         working-directory: aws
-        run: terragrunt apply --terragrunt-non-interactive tfplan
-
+        run: terragrunt apply --auto-approve
 
   # # 5. Terragrunt plan/apply for Azure
   # azure-deploy:
