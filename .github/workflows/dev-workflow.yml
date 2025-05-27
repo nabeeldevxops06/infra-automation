@@ -222,8 +222,9 @@ jobs:
           TG_LOG: DEBUG
         run: |
           set -eux
-          terragrunt init
-          terragrunt plan
+          terragrunt init --terragrunt-non-interactive
+          terragrunt plan --terragrunt-non-interactive --terragrunt-out=tfplan
+
 
 
       - name: Terragrunt apply
