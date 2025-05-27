@@ -11,6 +11,10 @@
 #   }
 # }
 
+terraform {
+  backend "local" {}
+}
+
 
 terraform {
   required_providers {
