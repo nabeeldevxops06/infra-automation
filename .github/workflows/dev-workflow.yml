@@ -306,14 +306,14 @@ jobs:
     name: Rollback on Failure
     if: failure()
     # needs: [aws-deploy, azure-deploy]
-    needs: [aws-deploy]
+    needs: [verify]
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
 
       - name: Rollback AWS
         run: |
-          cd aws/storage
+          cd aws
           terragrunt destroy --terragrunt-non-interactive -auto-approve
 
       # - name: Rollback Azure
