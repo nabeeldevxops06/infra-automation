@@ -295,7 +295,7 @@ jobs:
 
       - name: Verify AWS buckets
         run: |
-          aws s3 ls | grep my-aws-bucket || { echo "AWS bucket missing"; exit 1; }
+          aws s3 ls | grep infra-auto-terraform || { echo "AWS bucket missing"; exit 1; }
 
       # - name: Verify Azure Storage
       #   run: |

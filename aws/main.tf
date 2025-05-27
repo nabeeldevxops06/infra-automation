@@ -42,7 +42,7 @@ provider "aws" {
 }
 
 resource "aws_s3_bucket" "state" {
-  bucket = "infra-auto-terraform-state-${random_id.suffix.hex}"
+  bucket = "infra-auto-terraform"
   acl    = "private"
 }
 
