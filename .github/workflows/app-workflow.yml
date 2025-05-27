@@ -68,14 +68,8 @@ jobs:
           pwd
           ls -la
           cd /home/ubuntu/infra-automation/digital-name-card-main
-          npm ci
-          npm run build
+          npm install
+          pm2 start npm --name "digital-name-card" -- start
+          pm2 save 
+          pm2 list
   
-
-      # 6. Serve with PM2 and configure auto-start
-      - name: Serve & enable PM2 on boot
-        run: |
-          pm2 stop react-app || true
-          pm2 serve build --name react-app --spa --port 3000               # serve build folder 
-          pm2 save                                                         # snapshot the process list 
-          sudo pm2 startup systemd -u ubuntu --hp /home/ubuntu             # generate and enable systemd unit :contentReference[oaicite:16]{index=16}
