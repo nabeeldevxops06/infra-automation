@@ -37,7 +37,7 @@ resource "azurerm_resource_group" "rg" {
 }
 
 resource "azurerm_storage_account" "state" {
-  name                     = "infra-autostate-az"
+  name                     = "az-storage"
   resource_group_name      = azurerm_resource_group.rg.name
   account_tier             = "Standard"
   account_replication_type = "LRS"
