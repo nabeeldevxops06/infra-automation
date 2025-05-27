@@ -318,6 +318,7 @@ jobs:
       #     TERRAGRUNT_TFPATH: /usr/local/bin/terraform
       #   run: terragrunt apply --auto-approve
       
+      # 1) Read the storage account name *after* apply
       - name: Read Azure storage name
         id: azure_out
         working-directory: azure
@@ -327,6 +328,7 @@ jobs:
           storage_name=$(terragrunt output -raw storage_account_name)
           echo "storage=$storage_name" >> $GITHUB_OUTPUT
 
+      # 2) Verify it exists
       - name: Verify Azure Storage Account
         run: |
           az storage account show \
