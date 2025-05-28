@@ -10,6 +10,7 @@ jobs:
   sonar:
     name: SonarQube Analysis
     runs-on: [ self-hosted ]
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -17,7 +18,7 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '11'
 
       - name: SonarQube Scan
@@ -39,8 +40,8 @@ jobs:
 
   deploy:
     name: Deploy React App via SSH
-    runs-on: [ self-hosted ]
     needs: sonar
+    runs-on: [ self-hosted ]
 
     steps:
       - name: Install Git & Unzip
@@ -76,7 +77,8 @@ jobs:
           sudo apt-get install -y nodejs
 
       - name: Install PM2 globally
-        run: sudo npm install -g pm2
+        run: |
+          sudo npm install -g pm2
 
       - name: Install dependencies & launch with PM2
         run: |
