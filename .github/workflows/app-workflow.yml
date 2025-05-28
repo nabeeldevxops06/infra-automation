@@ -58,8 +58,12 @@ jobs:
 
       - name: Clone repository via SSH
         run: |
-          rm -rf ~/infra-automation
-          git clone git@github.com:nabeeldevxops06/infra-automation.git ~/infra-automation
+          if [ -d ~/infra-automation ]; then
+            echo "Directory exists, skipping clone."
+          else
+            git clone git@github.com:nabeeldevxops06/infra-automation.git ~/infra-automation
+          fi
+        
 
       - name: Install Node.js & npm via NodeSource
         run: |
