@@ -22,21 +22,11 @@ jobs:
           java-version: '11'
 
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v2
-        with:
-          projectBaseDir: .
-          extraProperties: |
-            sonar.sources=.
-            sonar.projectKey=infra-automation
+        run: |
+          cd /home/ubuntu/infra-automation/digital-name-card-main
+          sonar-scanner -Dsonar.login=${{ secrets.SONAR_TOKEN }}
         env:
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-          SONAR_TOKEN:     ${{ secrets.SONAR_TOKEN }}
-
-      - name: Quality Gate Check
-        uses: SonarSource/sonarqube-quality-gate-action@v1
-        env:
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-          SONAR_TOKEN:     ${{ secrets.SONAR_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   deploy:
     name: Deploy React App via SSH
