@@ -1,0 +1,356 @@
+name: Multicloud Terragrunt Pipeline
+
+# Grant the workflow permission to request OIDC tokens
+permissions:
+  id-token: write
+  contents: read
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  TFLINT_CONFIG: .tflint.hcl
+
+jobs:
+  # Checkout & Terraform/Terragrunt setup
+  setup:
+    name: Checkout + Setup
+    runs-on: self-hosted
+    outputs:
+      tf-version: ${{ steps.terraform.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y unzip curl
+
+      - name: Setup Terraform
+        id: terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.7
+      - name: Install Terragrunt & TFLint
+        run: |
+          # Terragrunt (if you also use Terragrunt in other jobs)
+          curl -Lo terragrunt \
+            https://github.com/gruntwork-io/terragrunt/releases/download/v0.54.1/terragrunt-linux-amd64
+          chmod +x terragrunt && sudo mv terragrunt /usr/local/bin/
+          # TFLint installer
+          curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh \
+            | sudo bash
+
+#   # Terragrunt plan/apply for AWS
+
+ # Lint test apply on Azure and AWS Terraform Code
+  lint:
+    runs-on: ubuntu-latest
+    needs: setup
+    strategy:
+      matrix:
+        module: [aws, azure]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system deps & TFLint & Terraform
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl unzip
+          # Terraform
+          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+          sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+          sudo apt-get update && sudo apt-get install -y terraform
+          # TFLint
+          curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh \
+            | sudo bash
+
+      - name: Initialize TFLint plugins
+        run: |
+          tflint \
+            --chdir=${{ matrix.module }} \
+            --config=$GITHUB_WORKSPACE/.tflint.hcl \
+            --init
+
+      - name: TFLint scan
+        run: |
+          tflint \
+            --chdir=${{ matrix.module }} \
+            --config=$GITHUB_WORKSPACE/.tflint.hcl
+
+      - name: Terraform validate
+        run: |
+          cd ${{ matrix.module }}
+          terraform init -backend=false -upgrade
+          terraform validate
+
+
+  aws-deploy:
+    name: AWS Bucket Provisioning
+    needs: [setup,lint]
+    runs-on: self-hosted
+    environment: production
+    env:
+      TERRAFORM_CLI_PATH: /usr/local/bin/terraform
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region:            us-east-1
+
+      - name: Mark repo as safe
+        run: git config --global --add safe.directory $GITHUB_WORKSPACE
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Terraform & Terragrunt
+        run: |
+          curl -fsSL https://releases.hashicorp.com/terraform/1.7.5/terraform_1.7.5_linux_amd64.zip -o terraform.zip
+          unzip terraform.zip
+          sudo mv terraform /usr/local/bin/terraform175
+          sudo ln -sf /usr/local/bin/terraform175 /usr/local/bin/terraform
+
+          curl -L -o terragrunt https://github.com/gruntwork-io/terragrunt/releases/latest/download/terragrunt_linux_amd64
+          chmod +x terragrunt
+          sudo mv terragrunt /usr/local/bin/
+      
+          terraform -version
+          terragrunt -version
+
+      - name: Verify Terragrunt Version
+        run: terragrunt --version
+        
+        
+      - name: Verify Terragrunt
+        run: terragrunt -v
+
+      - name: Terragrunt init & plan (with debug)
+        working-directory: aws
+        env:
+          TG_LOG: DEBUG
+          TERRAGRUNT_TFPATH: /usr/local/bin/terraform
+        run: |
+          set -eux
+          terragrunt init --terragrunt-non-interactive
+          terragrunt plan --terragrunt-non-interactive -out=tfplan
+
+
+
+
+      - name: Terragrunt apply
+        env:
+          TERRAGRUNT_TFPATH: /usr/local/bin/terraform
+        if: ${{ success() }}
+        working-directory: aws
+        run: terragrunt apply --auto-approve
+
+
+# 5. Terragrunt plan/apply for Azure
+  azure-deploy:
+    name: Azure Bucket Provisioning
+    # needs: aws-deploy
+    needs: [setup,lint]
+    runs-on: self-hosted
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+
+      - name: Install Azure CLI
+        run: curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
+      - name: Azure Service Principal Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+
+      - name: Delete existing Resource Group
+        run: |
+            set -eux
+            # delete infra-auto-rg if it exists
+            exists=$(az group exists --name infra-auto-rg)
+            if [ "$exists" = "true" ]; then
+              az group delete --name infra-auto-rg --yes --no-wait
+              az group wait --name infra-auto-rg --deleted
+            else
+              echo "Resource group infra-auto-rg not found; skipping delete."
+            fi
+  
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Terraform & Terragrunt
+        run: |
+          curl -fsSL https://releases.hashicorp.com/terraform/1.7.5/terraform_1.7.5_linux_amd64.zip -o terraform.zip
+          unzip terraform.zip
+          sudo mv terraform /usr/local/bin/terraform175
+          sudo ln -sf /usr/local/bin/terraform175 /usr/local/bin/terraform
+
+          curl -L -o terragrunt https://github.com/gruntwork-io/terragrunt/releases/latest/download/terragrunt_linux_amd64
+          chmod +x terragrunt
+          sudo mv terragrunt /usr/local/bin/
+      
+      - name: Verify Terragrunt
+        run: terragrunt --version
+
+      - name: Terragrunt init & plan (Azure)
+        working-directory: azure
+        env:
+          TG_LOG: DEBUG
+          TERRAGRUNT_TFPATH: /usr/local/bin/terraform
+        run: |
+          terragrunt init --terragrunt-non-interactive
+          terragrunt plan --terragrunt-non-interactive -out=tfplan
+
+      - name: Terragrunt apply (Azure)
+        if: ${{ success() }}
+        working-directory: azure
+        env:
+          TERRAGRUNT_TFPATH: /usr/local/bin/terraform
+        run: terragrunt apply --auto-approve
+      
+
+  # Post-deployment verification
+  verify:
+    name: Verify Buckets Exist
+    needs: [aws-deploy, azure-deploy]
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y unzip curl
+
+      - name: Setup Terraform
+        id: terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.7
+      - name: Install Terragrunt & TFLint
+        run: |
+          # Terragrunt (if you also use Terragrunt in other jobs)
+          curl -Lo terragrunt \
+            https://github.com/gruntwork-io/terragrunt/releases/download/v0.54.1/terragrunt-linux-amd64
+          chmod +x terragrunt && sudo mv terragrunt /usr/local/bin/
+
+      - name: Install Azure CLI
+        run: |
+         curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+    
+      - name: Verify AWS buckets
+        run: |
+          aws s3 ls | grep infra-auto-terraform || { echo "AWS bucket missing"; exit 1; }
+
+      - name: Install Azure CLI
+        run: curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
+      - name: Azure Service Principal Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}          
+
+      - name: Verify Azure Storage Accounts
+        run: |
+          set -eux
+          # List all storage account names in the RG
+          accounts=$(az storage account list \
+            --resource-group infra-auto-rg \
+            --query "[].name" \
+            -o tsv)
+      
+          echo "Found storage accounts:"
+          echo "$accounts"
+      
+          # Fail if none found
+          if [ -z "$accounts" ]; then
+            echo "No storage accounts in resource group infra-auto-rg"
+            exit 1
+          fi
+      
+          # (Optional) Verify one matches the azstorage prefix
+          echo "$accounts" | grep '^azstorage' || { echo "No azstorage* account found"; exit 1; }
+      
+
+  # Rollback on failure
+  rollback:
+    name: Rollback on Failure
+    if: failure()
+    needs: [verify]
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Rollback AWS
+        run: |
+          cd aws
+          terragrunt destroy --terragrunt-non-interactive -auto-approve
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Terraform & Terragrunt
+        run: |
+          curl -fsSL https://releases.hashicorp.com/terraform/1.7.5/terraform_1.7.5_linux_amd64.zip -o terraform.zip
+          unzip terraform.zip
+          sudo mv terraform /usr/local/bin/terraform175
+          sudo ln -sf /usr/local/bin/terraform175 /usr/local/bin/terraform
+
+          curl -L -o terragrunt https://github.com/gruntwork-io/terragrunt/releases/latest/download/terragrunt_linux_amd64
+          chmod +x terragrunt
+          sudo mv terragrunt /usr/local/bin/
+      
+          terraform -version
+          terragrunt -version
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Confirm Rollback
+        run: |
+          echo "AWS buckets after rollback:"
+          aws s3 ls
+          # echo "Azure storage after rollback:"
+          # az storage account list --query "[].name"
+
+
+
+
+
+
+
