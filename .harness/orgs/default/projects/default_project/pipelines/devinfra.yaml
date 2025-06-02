@@ -45,3 +45,5 @@ pipeline:
                       type: branch
                       spec:
                         branch: main
+        delegateSelectors:
+          - docker-delegate
