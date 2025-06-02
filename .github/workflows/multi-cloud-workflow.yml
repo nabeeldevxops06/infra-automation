@@ -4,10 +4,13 @@ name: Multicloud Terragrunt Pipeline
 permissions:
   id-token: write
   contents: read
+# on:
+#   push:
+#     branches:
+#       - main
+#   workflow_dispatch:
+
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 env:
